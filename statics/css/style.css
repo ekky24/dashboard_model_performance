@@ -1,0 +1,23 @@
+.navbar-select-unit {
+    width: 15rem !important;
+}
+
+.navbar-select-system {
+    width: 15rem !important;
+}
+
+.navbar-select-equipment {
+    width: 15rem !important;
+}
+
+.navbar-select-tag {
+    width: 15rem !important;
+}
+
+.navbar-date-picker {
+    width: 20rem !important;
+}
+
+.select2-container--default .select2-selection--single {
+    border: none !important;
+}
