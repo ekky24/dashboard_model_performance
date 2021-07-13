@@ -1,0 +1,45 @@
+import pandas as pd
+import numpy as np
+
+def handle_nan_in_sensor_df(sensor_df, menit, start_date, end_date):
+	# Replace the outliers with NaNs. This in necessery, in order to consolidate the all sources of bad values int NaN indicators.
+	dataset_dates_set = set(sensor_df.index)
+	all_dates = pd.Series(data=pd.date_range(start=start_date, end=end_date, freq=f'{menit}min'))
+	mask = all_dates.isin(sensor_df.index)
+
+	if all_dates[~mask].shape[0] > 0:
+		all_data = np.empty((all_dates.shape[0], sensor_df.shape[1]))
+
+		all_data[:] = np.nan
+		for i in range(all_dates.shape[0]):
+			date = all_dates[i]
+
+			if date in dataset_dates_set:
+				all_data[i, :] = sensor_df.loc[date].values
+
+		sensor_df = pd.DataFrame(all_data, columns=sensor_df.columns, index=all_dates)
+	sensor_df.interpolate(method='time', limit_direction='both', inplace=True)
+	sensor_df.interpolate(method='pad', inplace=True)
+	sensor_df.fillna(value=0, inplace=True)
+
+	return sensor_df
+
+def detect_and_label_outliers_as_nan(data, m=2):
+	for column in data.columns:
+		d = np.abs(data[column] - np.mean(data[column]))
+		mdev = np.mean(d)
+		s = d/mdev if mdev else np.zeros(d.shape)
+		data.loc[s > m, column] = np.NaN
+
+	return data
+
+def ordering_data(df, sensor_list):
+	ordered_dict = {}
+	for sensor in sensor_list:
+		try:
+			ordered_dict[sensor] = df.loc[:, sensor]
+		except KeyError:
+			ordered_dict[sensor] = pd.Series(np.zeros(df.shape[0]), index=df.index)
+
+	ordered_df = pd.DataFrame(ordered_dict)
+	return ordered_df

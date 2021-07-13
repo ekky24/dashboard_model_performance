@@ -84,7 +84,11 @@ $(document).ready(function() {
 	$('.searchable-select').select2({
 		placeholder: "Select an option",
 	});
-	$('.date-range-picker').daterangepicker();
+	$('.date-range-picker').daterangepicker({
+		locale: {
+			format: 'DD/MM/YYYY'
+		}
+	});
 
 	$('#select-unit').on('change', topbar_select_changer);
 	$('#select-system').on('change', topbar_select_changer);
