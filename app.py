@@ -1,6 +1,7 @@
 from flask import Flask, render_template, url_for, request, jsonify
 import pandas as pd
 import numpy as np
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 from utils.data_connector import set_conn, get_tag_sensor_mapping, get_realtime_data, get_anomaly_data, close_conn
 from credentials.db_credentials import DB_UNIT_MAPPER
@@ -57,6 +58,21 @@ def get_anomaly_detection_data():
 		autoencoder_df, lower_limit_df, upper_limit_df = get_anomaly_data(engine, tag_name, start_date, end_date)
 		close_conn(engine)
 
+		ovr_loss = mean_absolute_error(realtime_df.values, autoencoder_df.values)
+		ovr_loss = round(ovr_loss, 3)
+
+		metrics_timestamp = pd.date_range(start=start_date, \
+			end=pd.Timestamp.now().round('1H'), freq=f'1H')
+
+		metrics_data = []
+		metrics_index = []
+		for idx, row in enumerate(metrics_timestamp):
+			if idx < len(metrics_timestamp)-1:
+				curr_realtime = realtime_df.loc[metrics_timestamp[idx]:metrics_timestamp[idx+1]]
+				curr_autoencoder = autoencoder_df.loc[metrics_timestamp[idx]:metrics_timestamp[idx+1]]
+				metrics_data.append(mean_absolute_error(curr_realtime, curr_autoencoder))
+				metrics_index.append(row.strftime('%d/%m/%Y %H:%M:%S'))
+
 		resp['status'] = 'success'
 		resp['data'] = {}
 		
@@ -64,6 +80,11 @@ def get_anomaly_detection_data():
 		resp['data']['autoencoder'] = autoencoder_df.to_dict(orient='split')
 		resp['data']['lower_limit'] = lower_limit_df.to_dict(orient='split')
 		resp['data']['upper_limit'] = upper_limit_df.to_dict(orient='split')
+
+		resp['data']['metrics'] = {}
+		resp['data']['metrics']['index'] = metrics_index
+		resp['data']['metrics']['data'] = metrics_data
+		resp['data']['metrics']['ovr_loss'] = ovr_loss
 
 	except Exception as e:
 		resp['status'] = 'failed'

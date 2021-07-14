@@ -11,11 +11,17 @@ $(document).ready(function() {
             $.ajax({url: "/get_anomaly_detection_data",
             data: {'unit': String(unit_value), 'tag': String(tag_value), 'date_range': String(date_range_value)}, 
             success: function(data){
+                $('.intro-text').remove();
+
                 index_data = data.data.realtime.index;
                 realtime_data = data.data.realtime.data;
                 autoencoder_data = data.data.autoencoder.data;
                 lower_limit_data = data.data.lower_limit.data;
                 upper_limit_data = data.data.upper_limit.data;
+
+                metrics_data = data.data.metrics.data;
+                metrics_index = data.data.metrics.index;
+                metrics_ovr_loss = data.data.metrics.ovr_loss;
                 
                 realtime_graph_data = [];
                 autoencoder_graph_data = [];
@@ -103,6 +109,31 @@ $(document).ready(function() {
                     showlegend: false
                 };
                 Plotly.newPlot('control-limit-graph', control_limit_graph, control_limit_layout);
+
+                /* Plotting Metrics */
+                var metrics_graph = [
+                    {
+                        x: metrics_index,
+                        y: metrics_data,
+                        type: 'scatter',
+                        name: 'Loss',
+                        marker: {
+                            color: 'rgba(2, 117, 216, 0.95)'
+                        }
+                    },
+                ];
+
+                var metrics_layout = {
+                    title: data.data.realtime.columns[0],
+                    yaxis: {
+                        showline: false
+                    },
+                    showlegend: false
+                };
+                Plotly.newPlot('metrics-graph', metrics_graph, metrics_layout);
+
+                $('#ovr-metric-value').text(metrics_ovr_loss);
+	            $('.metrics-caption').css('visibility', 'visible');
             }});
         }
     }
