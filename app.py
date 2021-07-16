@@ -3,6 +3,8 @@ from numpy.lib.type_check import real
 import pandas as pd
 import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
+import simplejson
+import datetime
 
 from utils.data_connector import set_conn, get_tag_sensor_mapping, get_realtime_data, \
 	get_future_prediction_fn, get_anomaly_fn, close_conn
@@ -42,6 +44,81 @@ def get_sensor_mapping():
 
 	return jsonify(resp)
 
+@app.route('/get_raw_data')
+def get_raw_data():
+	resp = {'status': 'failed','data': 'none'}
+
+	try:
+		req_data = dict(request.values)
+		unit = req_data['unit']
+		tag_name = req_data['tag']
+		date_range = req_data['date_range']
+
+		raw_start_date = date_range.split(' - ')[0]
+		raw_start_date = raw_start_date.split('/')
+		start_date = f'{raw_start_date[2]}-{raw_start_date[1]}-{raw_start_date[0]}'
+
+		raw_end_date = date_range.split(' - ')[1]
+		raw_end_date = raw_end_date.split('/')
+		end_date = f'{raw_end_date[2]}-{raw_end_date[1]}-{raw_end_date[0]}'
+
+		engine = set_conn(unit)
+		realtime_df = get_realtime_data(engine, tag_name, start_date, end_date, 1)
+		close_conn(engine)
+
+		dates_set = set(realtime_df.index)
+		all_dates = pd.Series(data=pd.date_range(start=start_date, end=end_date, freq=f'1min'))
+		mask = all_dates.isin(realtime_df.index)
+
+		if all_dates[~mask].shape[0] > 0:
+			all_data = np.empty((all_dates.shape[0], realtime_df.shape[1]))
+
+			all_data[:] = np.nan
+			for i in range(all_dates.shape[0]):
+				date = all_dates[i]
+
+				if date in dates_set:
+					all_data[i, :] = realtime_df.loc[date].values
+
+			realtime_df = pd.DataFrame(all_data, columns=realtime_df.columns, index=all_dates)
+
+		n_all_data = realtime_df.shape[0]
+		n_null = int(realtime_df.isna().sum().values[0])
+		n_outlier = 94
+
+		stat_desc_mean = float(round(realtime_df.mean(axis=0).values[0], 3))
+		stat_desc_std_dev = float(round(realtime_df.std(axis=0).values[0], 3))
+		stat_desc_q1 = float(round(realtime_df.quantile(0.25, axis=0).values[0], 3))
+		stat_desc_median = float(round(realtime_df.median(axis=0).values[0], 3))
+		stat_desc_q3 = float(round(realtime_df.quantile(0.75, axis=0).values[0], 3))
+		stat_desc_min = float(round(realtime_df.min(axis=0).values[0], 3))
+		stat_desc_max = float(round(realtime_df.max(axis=0).values[0], 3))
+
+		resp['status'] = 'success'
+		resp['data'] = {}
+		
+		resp['data']['realtime'] = {}
+		resp['data']['realtime']['data'] = simplejson.dumps(realtime_df.to_dict(orient='split'), \
+			ignore_nan=True, default=datetime.datetime.isoformat)
+		resp['data']['realtime']['n_normal'] = (n_all_data - n_null - n_outlier) / n_all_data
+		resp['data']['realtime']['n_null'] = n_null / n_all_data
+		resp['data']['realtime']['n_outlier'] = n_outlier / n_all_data
+
+		resp['data']['stat_desc'] = {}
+		resp['data']['stat_desc']['mean'] = stat_desc_mean
+		resp['data']['stat_desc']['std_dev'] = stat_desc_std_dev
+		resp['data']['stat_desc']['q1'] = stat_desc_q1
+		resp['data']['stat_desc']['median'] = stat_desc_median
+		resp['data']['stat_desc']['q3'] = stat_desc_q3
+		resp['data']['stat_desc']['minimum'] = stat_desc_min
+		resp['data']['stat_desc']['maximum'] = stat_desc_max
+
+	except Exception as e:
+		resp['status'] = 'failed'
+		resp['data'] = str(e)
+
+	return jsonify(resp)
+
 @app.route('/get_anomaly_detection_data')
 def get_anomaly_detection_data():
 	resp = {'status': 'failed','data': 'none'}
@@ -65,6 +142,15 @@ def get_anomaly_detection_data():
 		autoencoder_df, lower_limit_df, upper_limit_df = get_anomaly_fn(engine, \
 			tag_name, start_date, end_date, config.ANOMALY_RESAMPLE_MIN)
 		close_conn(engine)
+
+		realtime_df = handle_nan_in_sensor_df(realtime_df, config.ANOMALY_RESAMPLE_MIN, start_date, \
+			pd.Timestamp.now().round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
+		autoencoder_df = handle_nan_in_sensor_df(autoencoder_df, config.ANOMALY_RESAMPLE_MIN, \
+			start_date, pd.Timestamp.now().round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
+		lower_limit_df = handle_nan_in_sensor_df(lower_limit_df, config.ANOMALY_RESAMPLE_MIN, \
+			start_date, pd.Timestamp.now().round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
+		upper_limit_df = handle_nan_in_sensor_df(upper_limit_df, config.ANOMALY_RESAMPLE_MIN, \
+			start_date, pd.Timestamp.now().round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
 
 		ovr_loss = mean_absolute_error(realtime_df.values, autoencoder_df.values)
 		ovr_loss = round(ovr_loss, 3)
@@ -133,6 +219,9 @@ def get_future_prediction_data():
 		# prediction_df = get_future_prediction_fn(engine, tag_name, start_date, \
 		# 	end_date, config.FUTURE_PREDICTION_RESAMPLE_MIN)
 		close_conn(engine)
+
+		realtime_df = handle_nan_in_sensor_df(realtime_df, config.FUTURE_PREDICTION_RESAMPLE_MIN, start_date, \
+			pd.Timestamp.now().round(f'{config.FUTURE_PREDICTION_RESAMPLE_MIN}min'))
 
 		metrics_data = []
 		metrics_index = []

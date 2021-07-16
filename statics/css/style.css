@@ -25,3 +25,8 @@
 .metrics-caption {
     visibility: hidden;
 }
+
+.img-logo {
+    width: 2.5rem;
+    height: auto;
+}

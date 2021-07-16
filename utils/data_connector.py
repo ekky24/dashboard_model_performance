@@ -28,8 +28,6 @@ def get_realtime_data(engine, tag_name, start_date, end_date, resample_min):
 	realtime_df.set_index('f_date_rec', inplace=True)
 	realtime_df.sort_index(ascending=True, inplace=True)
 	realtime_df = realtime_df.resample(f'{resample_min}min').mean()
-	realtime_df = handle_nan_in_sensor_df(realtime_df, resample_min, start_date, \
-		pd.Timestamp.now().round(f'{resample_min}min'))
 
 	return realtime_df
 
@@ -45,20 +43,14 @@ def get_anomaly_fn(engine, tag_name, start_date, end_date, resample_min):
 	autoencoder_df = pd.pivot_table(result_df, values='f_value', index='f_timestamp', columns='f_tag_name').reset_index()
 	autoencoder_df.set_index('f_timestamp', inplace=True)
 	autoencoder_df.sort_index(ascending=True, inplace=True)
-	autoencoder_df = handle_nan_in_sensor_df(autoencoder_df, resample_min, \
-		start_date, pd.Timestamp.now().round(f'{resample_min}min'))
 
 	lower_limit_df = pd.pivot_table(result_df, values='f_lower_limit', index='f_timestamp', columns='f_tag_name').reset_index()
 	lower_limit_df.set_index('f_timestamp', inplace=True)
 	lower_limit_df.sort_index(ascending=True, inplace=True)
-	lower_limit_df = handle_nan_in_sensor_df(lower_limit_df, resample_min, \
-		start_date, pd.Timestamp.now().round(f'{resample_min}min'))
 
 	upper_limit_df = pd.pivot_table(result_df, values='f_upper_limit', index='f_timestamp', columns='f_tag_name').reset_index()
 	upper_limit_df.set_index('f_timestamp', inplace=True)
 	upper_limit_df.sort_index(ascending=True, inplace=True)
-	upper_limit_df = handle_nan_in_sensor_df(upper_limit_df, resample_min, \
-		start_date, pd.Timestamp.now().round(f'{resample_min}min'))
 
 	return autoencoder_df, lower_limit_df, upper_limit_df
 
