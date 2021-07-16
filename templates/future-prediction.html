@@ -1,0 +1,124 @@
+{% extends "main.html" %}
+
+{% block content %}
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Future Prediction</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+
+        <!-- Prediction Chart -->
+        <div class="col-xl-12">
+            <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div
+                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Prediction</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div id="autoencoder-graph">
+                        <p class="text-center intro-text">Please select an option...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row -->
+
+    <div class="row">
+
+        <!-- Autoencoder Chart -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div
+                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Metrics</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div id="metrics-graph">
+                        <p class="text-center intro-text">Please select an option...</p>
+                    </div>
+                    <div class="mt-4 text-center small metrics-caption">
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-primary"></i> Mean Absolute Percentage Error
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-5">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card shadow mb-4">
+                        <div
+                            class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Overall Metrics</h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="ovr-metric-graph">
+                                <p class="text-center intro-text">Please select an option...</p>
+                                <h1 id="ovr-metric-value" class="text-center"></h1>
+                            </div>
+                            <div class="mt-4 text-center small metrics-caption">
+                                <span class="mr-2">
+                                    <i class="fas fa-circle text-primary"></i> Mean Absolute Percentage Error
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-12">
+                    <div class="card shadow mb-4">
+                        <div
+                            class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                            <h6 class="m-0 font-weight-bold text-primary">Model Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table" width="100%" cellspacing="0">
+                                    <tbody>
+                                        <tr>
+                                            <td style="font-weight: bold;">Status</td>
+                                            <td>:</td>
+                                            <td>Active</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">Version</td>
+                                            <td>:</td>
+                                            <td>v4.22</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">Last Updated</td>
+                                            <td>:</td>
+                                            <td>02-07-2021</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: bold;">Model Type</td>
+                                            <td>:</td>
+                                            <td>Exponential MA</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block additional_script %}
+
+    <script src="{{ url_for('static', filename='js/future_prediction.js') }}"></script>
+
+{% endblock %}

@@ -95,6 +95,12 @@ $(document).ready(function() {
 	$('#select-equipment').on('change', topbar_select_changer);
 	$('#select-tag').on('change', topbar_select_changer);
 
+	$('#loading-modal').modal({
+		show: true,
+		backdrop: 'static', 
+		keyboard: false
+	});
+
 	$.ajax({url: "/get_sensor_mapping",
 	success: function(data){		
 		sensor_mapping.columns = data.data.columns
@@ -110,5 +116,7 @@ $(document).ready(function() {
 		for (let index = 0; index < units.length; index++) {
 			$('#select-unit').append(new Option(units[index], units[index]));
 		}
-	}});
+	}}).done(function() {
+		$('#loading-modal').modal('hide');
+	});
 });

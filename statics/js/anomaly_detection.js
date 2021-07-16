@@ -8,6 +8,12 @@ $(document).ready(function() {
         date_range_value = $('#date-range-picker').val();
 
         if(tag_value != "" && date_range_value != "") {
+            $('#loading-modal').modal({
+                show: true,
+                backdrop: 'static', 
+                keyboard: false
+            });
+
             $.ajax({url: "/get_anomaly_detection_data",
             data: {'unit': String(unit_value), 'tag': String(tag_value), 'date_range': String(date_range_value)}, 
             success: function(data){
@@ -134,12 +140,17 @@ $(document).ready(function() {
 
                 $('#ovr-metric-value').text(metrics_ovr_loss);
 	            $('.metrics-caption').css('visibility', 'visible');
-            }});
+            }}).done(function() {
+                $('#loading-modal').modal('hide');
+            });
         }
     }
 
     /* ***************************************** */
 
+    /* Nav Items Configuration */
+    $('.nav-item').removeClass("active");
+    $('#nav-anomaly-detection').addClass("active");
 
     $('#select-tag').on('change', fetch_anomaly_detection_data);
     $('#date-range-picker').on('apply.daterangepicker', fetch_anomaly_detection_data);
