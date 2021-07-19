@@ -9,7 +9,7 @@ import datetime
 from utils.data_connector import set_conn, get_tag_sensor_mapping, get_realtime_data, \
 	get_future_prediction_fn, get_anomaly_fn, close_conn
 from credentials.db_credentials import DB_UNIT_MAPPER
-from utils.data_cleaner import handle_nan_in_sensor_df
+from utils.data_cleaner import handle_nan_in_sensor_df, outlier_calculator
 import config
 
 app = Flask(__name__, static_folder="statics")
@@ -84,7 +84,7 @@ def get_raw_data():
 
 		n_all_data = realtime_df.shape[0]
 		n_null = int(realtime_df.isna().sum().values[0])
-		n_outlier = 94
+		n_outlier = outlier_calculator(realtime_df, config.OUTLIER_SIGMA)[realtime_df.columns[0]]
 
 		stat_desc_mean = float(round(realtime_df.mean(axis=0).values[0], 3))
 		stat_desc_std_dev = float(round(realtime_df.std(axis=0).values[0], 3))
