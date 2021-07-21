@@ -1,4 +1,5 @@
-from flask import Flask, render_template, url_for, request, jsonify
+from flask import Flask, render_template, url_for, request, jsonify, session
+from flask.globals import current_app
 from numpy.lib.type_check import real
 import pandas as pd
 import numpy as np
@@ -11,8 +12,11 @@ from utils.data_connector import set_conn, get_tag_sensor_mapping, get_realtime_
 from credentials.db_credentials import DB_UNIT_MAPPER
 from utils.data_cleaner import handle_nan_in_sensor_df, outlier_calculator
 import config
+import os
+import glob
 
 app = Flask(__name__, static_folder="statics")
+app.secret_key = 'dashboard_model_performance'
 
 @app.route('/')
 def home():
@@ -31,12 +35,28 @@ def get_sensor_mapping():
 	resp = {'status': 'failed','data': 'none'}
 
 	try:
-		engine = set_conn('DB_SOKET')
-		equipment_mapping_df = get_tag_sensor_mapping(engine)
-		close_conn(engine)
+		equipment_mapping_files = glob.glob(f'{config.TEMP_FOLDER}/*.csv')
+
+		if not session.get('is_load_equipment_mapping'):
+			for f in equipment_mapping_files:
+				os.remove(f)
+			equipment_mapping_files = []
+		
+		if len(equipment_mapping_files) > 0:
+			equipment_mapping_df = pd.read_csv(f'{equipment_mapping_files[0]}')
+		else:
+			engine = set_conn('DB_SOKET')
+			equipment_mapping_df = get_tag_sensor_mapping(engine)
+			close_conn(engine)
+
+			curr_timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M')
+			equipment_mapping_df.dropna(inplace=True)
+			equipment_mapping_df.to_csv(f'{config.TEMP_FOLDER}/equipment_mapping_{curr_timestamp}.csv', \
+				index=False)
 
 		resp['status'] = 'success'
 		resp['data'] = equipment_mapping_df.to_dict(orient='split')
+		session['is_load_equipment_mapping'] = True
 
 	except Exception as e:
 		resp['status'] = 'failed'
@@ -84,7 +104,9 @@ def get_raw_data():
 
 		n_all_data = realtime_df.shape[0]
 		n_null = int(realtime_df.isna().sum().values[0])
-		n_outlier = outlier_calculator(realtime_df, config.OUTLIER_SIGMA)[realtime_df.columns[0]]
+		outlier_df, n_outlier = outlier_calculator(realtime_df, config.OUTLIER_SIGMA)
+
+		n_outlier = n_outlier[realtime_df.columns[0]]
 
 		stat_desc_mean = float(round(realtime_df.mean(axis=0).values[0], 3))
 		stat_desc_std_dev = float(round(realtime_df.std(axis=0).values[0], 3))
@@ -96,9 +118,11 @@ def get_raw_data():
 
 		resp['status'] = 'success'
 		resp['data'] = {}
-		
+			
 		resp['data']['realtime'] = {}
 		resp['data']['realtime']['data'] = simplejson.dumps(realtime_df.to_dict(orient='split'), \
+			ignore_nan=True, default=datetime.datetime.isoformat)
+		resp['data']['realtime']['outlier'] = simplejson.dumps(outlier_df.to_dict(orient='split'), \
 			ignore_nan=True, default=datetime.datetime.isoformat)
 		resp['data']['realtime']['n_normal'] = (n_all_data - n_null - n_outlier) / n_all_data
 		resp['data']['realtime']['n_null'] = n_null / n_all_data

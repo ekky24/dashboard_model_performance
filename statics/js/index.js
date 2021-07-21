@@ -20,8 +20,11 @@ $(document).ready(function() {
                 $('.intro-text').remove();
 
                 parse_data = JSON.parse(data.data.realtime.data)
+                parse_outlier_data = JSON.parse(data.data.realtime.outlier)
                 index_data = parse_data.index;
+                outlier_index_data = parse_outlier_data.index;
                 realtime_data = parse_data.data;
+                outlier_data = parse_outlier_data.data;
                 n_normal = data.data.realtime.n_normal;
                 n_null = data.data.realtime.n_null;
                 n_outlier = data.data.realtime.n_outlier;
@@ -35,9 +38,11 @@ $(document).ready(function() {
                 stat_desc_maximum = data.data.stat_desc.maximum;
 
                 realtime_graph_data = [];
+                outlier_graph_data = [];
 
                 for (let index = 0; index < realtime_data.length; index++) {
                     realtime_graph_data.push(realtime_data[index][0]);
+                    outlier_graph_data.push(outlier_data[index][0]);
                 } 
                 
                 /* Plotting Raw Data */
@@ -49,6 +54,15 @@ $(document).ready(function() {
                         name: 'Raw Data',
                         marker: {
                             color: 'rgba(2, 117, 216, 0.95)'
+                        }
+                    },
+                    {
+                        x: outlier_index_data,
+                        y: outlier_graph_data,
+                        type: 'scatter',
+                        name: 'Outlier',
+                        marker: {
+                            color: 'rgba(231, 74, 59, 0.95)'
                         }
                     },
                 ];

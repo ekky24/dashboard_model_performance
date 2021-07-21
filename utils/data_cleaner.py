@@ -35,6 +35,7 @@ def detect_and_label_outliers_as_nan(data, m=2):
 
 def outlier_calculator(data, m=2):
 	n_outlier = {}
+	outlier_data = data.copy()
 
 	for column in data.columns:
 		orig_n_data = int(data[[column]].isna().sum().values[0])
@@ -42,10 +43,11 @@ def outlier_calculator(data, m=2):
 		mdev = np.mean(d)
 		s = d/mdev if mdev else np.zeros(d.shape)
 		data.loc[s > m, column] = np.NaN
+		outlier_data.loc[s <= m, column] = np.NaN
 		outlier_n_data = int(data[[column]].isna().sum().values[0])
 
 		n_outlier[column] = outlier_n_data - orig_n_data
-	return n_outlier
+	return outlier_data, n_outlier
 
 def ordering_data(df, sensor_list):
 	ordered_dict = {}
