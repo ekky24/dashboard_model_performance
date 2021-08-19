@@ -14,6 +14,7 @@ from utils.data_cleaner import handle_nan_in_sensor_df, outlier_calculator
 import config
 import os
 import glob
+import sys
 
 debug_mode = False
 
@@ -63,6 +64,7 @@ def get_sensor_mapping():
 	except Exception as e:
 		resp['status'] = 'failed'
 		resp['data'] = str(e)
+		print(f'{str(e)} on line {sys.exc_info()[-1].tb_lineno}')
 
 	return jsonify(resp)
 
@@ -154,6 +156,7 @@ def get_raw_data():
 	except Exception as e:
 		resp['status'] = 'failed'
 		resp['data'] = str(e)
+		print(f'{str(e)} on line {sys.exc_info()[-1].tb_lineno}')
 
 	return jsonify(resp)
 
@@ -203,7 +206,7 @@ def get_anomaly_detection_data():
 		ovr_loss = mean_absolute_error(realtime_df.values, autoencoder_df.values)
 		ovr_loss = round(ovr_loss, 3)
 
-		metrics_timestamp = pd.date_range(start=start_date, \
+		metrics_timestamp = pd.date_range(start=start_time, \
 			end=pd.Timestamp(end_time).round('1H'), freq=f'1H')
 
 		metrics_data = []
@@ -231,6 +234,7 @@ def get_anomaly_detection_data():
 	except Exception as e:
 		resp['status'] = 'failed'
 		resp['data'] = str(e)
+		print(f'{str(e)} on line {sys.exc_info()[-1].tb_lineno}')
 
 	return jsonify(resp)
 
@@ -335,6 +339,7 @@ def get_future_prediction_data():
 	except Exception as e:
 		resp['status'] = 'failed'
 		resp['data'] = str(e)
+		print(f'{str(e)} on line {sys.exc_info()[-1].tb_lineno}')
 
 	return jsonify(resp)
 
