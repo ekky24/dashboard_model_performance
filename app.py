@@ -15,6 +15,8 @@ import config
 import os
 import glob
 
+debug_mode = True
+
 app = Flask(__name__, static_folder="statics")
 app.secret_key = 'dashboard_model_performance'
 
@@ -77,17 +79,29 @@ def get_raw_data():
 		raw_start_date = date_range.split(' - ')[0]
 		raw_start_date = raw_start_date.split('/')
 		start_date = f'{raw_start_date[2]}-{raw_start_date[1]}-{raw_start_date[0]}'
+		start_time = f'{start_date} 00:00:00'
 
 		raw_end_date = date_range.split(' - ')[1]
 		raw_end_date = raw_end_date.split('/')
 		end_date = f'{raw_end_date[2]}-{raw_end_date[1]}-{raw_end_date[0]}'
 
+		curr_timestamp = datetime.datetime.now()
+		curr_date = curr_timestamp.strftime('%Y-%m-%d')
+
+		if end_date == curr_date:
+			curr_hour = curr_timestamp.strftime('%H:%M:%S')
+			end_time = f'{end_date} {curr_hour}'
+		else:
+			end_time = f'{end_date} 23:59:59'
+
 		engine = set_conn(unit)
-		realtime_df = get_realtime_data(engine, tag_name, start_date, end_date, 1)
+		realtime_df = get_realtime_data(engine, tag_name, start_date, \
+			end_date, config.RAW_DATA_RESAMPLE_MIN)
 		close_conn(engine)
 
 		dates_set = set(realtime_df.index)
-		all_dates = pd.Series(data=pd.date_range(start=start_date, end=end_date, freq=f'1min'))
+		all_dates = pd.Series(data=pd.date_range(start=start_time, end=end_time, \
+			freq=f'{config.RAW_DATA_RESAMPLE_MIN}min'))
 		mask = all_dates.isin(realtime_df.index)
 
 		if all_dates[~mask].shape[0] > 0:
@@ -156,10 +170,20 @@ def get_anomaly_detection_data():
 		raw_start_date = date_range.split(' - ')[0]
 		raw_start_date = raw_start_date.split('/')
 		start_date = f'{raw_start_date[2]}-{raw_start_date[1]}-{raw_start_date[0]}'
+		start_time = f'{start_date} 00:00:00'
 
 		raw_end_date = date_range.split(' - ')[1]
 		raw_end_date = raw_end_date.split('/')
 		end_date = f'{raw_end_date[2]}-{raw_end_date[1]}-{raw_end_date[0]}'
+
+		curr_timestamp = datetime.datetime.now()
+		curr_date = curr_timestamp.strftime('%Y-%m-%d')
+
+		if end_date == curr_date:
+			curr_hour = curr_timestamp.strftime('%H:%M:%S')
+			end_time = f'{end_date} {curr_hour}'
+		else:
+			end_time = f'{end_date} 23:59:59'
 
 		engine = set_conn(unit)
 		realtime_df = get_realtime_data(engine, tag_name, start_date, end_date, config.ANOMALY_RESAMPLE_MIN)
@@ -167,20 +191,20 @@ def get_anomaly_detection_data():
 			tag_name, start_date, end_date, config.ANOMALY_RESAMPLE_MIN)
 		close_conn(engine)
 
-		realtime_df = handle_nan_in_sensor_df(realtime_df, config.ANOMALY_RESAMPLE_MIN, start_date, \
-			pd.Timestamp.now().round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
+		realtime_df = handle_nan_in_sensor_df(realtime_df, config.ANOMALY_RESAMPLE_MIN, start_time, \
+			pd.Timestamp(end_time).round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
 		autoencoder_df = handle_nan_in_sensor_df(autoencoder_df, config.ANOMALY_RESAMPLE_MIN, \
-			start_date, pd.Timestamp.now().round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
+			start_time, pd.Timestamp(end_time).round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
 		lower_limit_df = handle_nan_in_sensor_df(lower_limit_df, config.ANOMALY_RESAMPLE_MIN, \
-			start_date, pd.Timestamp.now().round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
+			start_time, pd.Timestamp(end_time).round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
 		upper_limit_df = handle_nan_in_sensor_df(upper_limit_df, config.ANOMALY_RESAMPLE_MIN, \
-			start_date, pd.Timestamp.now().round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
+			start_time, pd.Timestamp(end_time).round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
 
 		ovr_loss = mean_absolute_error(realtime_df.values, autoencoder_df.values)
 		ovr_loss = round(ovr_loss, 3)
 
 		metrics_timestamp = pd.date_range(start=start_date, \
-			end=pd.Timestamp.now().round('1H'), freq=f'1H')
+			end=pd.Timestamp(end_time).round('1H'), freq=f'1H')
 
 		metrics_data = []
 		metrics_index = []
@@ -223,11 +247,20 @@ def get_future_prediction_data():
 		raw_start_date = date_range.split(' - ')[0]
 		raw_start_date = raw_start_date.split('/')
 		start_date = f'{raw_start_date[2]}-{raw_start_date[1]}-{raw_start_date[0]}'
+		start_time = f'{start_date} 00:00:00'
 
 		raw_end_date = date_range.split(' - ')[1]
 		raw_end_date = raw_end_date.split('/')
 		end_date = f'{raw_end_date[2]}-{raw_end_date[1]}-{raw_end_date[0]}'
 
+		curr_timestamp = datetime.datetime.now()
+		curr_date = curr_timestamp.strftime('%Y-%m-%d')
+
+		if end_date == curr_date:
+			curr_hour = curr_timestamp.strftime('%H:%M:%S')
+			end_time = f'{end_date} {curr_hour}'
+		else:
+			end_time = f'{end_date} 23:59:59'
 		
 		###############################################################################
 		'''
@@ -244,8 +277,8 @@ def get_future_prediction_data():
 		# 	end_date, config.FUTURE_PREDICTION_RESAMPLE_MIN)
 		close_conn(engine)
 
-		realtime_df = handle_nan_in_sensor_df(realtime_df, config.FUTURE_PREDICTION_RESAMPLE_MIN, start_date, \
-			pd.Timestamp.now().round(f'{config.FUTURE_PREDICTION_RESAMPLE_MIN}min'))
+		realtime_df = handle_nan_in_sensor_df(realtime_df, config.FUTURE_PREDICTION_RESAMPLE_MIN, start_time, \
+			pd.Timestamp(end_time).round(f'{config.FUTURE_PREDICTION_RESAMPLE_MIN}min'))
 
 		metrics_data = []
 		metrics_index = []
@@ -260,6 +293,9 @@ def get_future_prediction_data():
 		input_step = config.FUTURE_PREDICTION_INPUT_STEP
 		output_step = config.FUTURE_PREDICTION_OUTPUT_STEP
 
+		if prediction_date.empty:
+			raise Exception("Insufficient data. Please select a larger date range.")
+			
 		for idx in range(input_step, input_step + len(prediction_date)):
 			input_data = realtime_df.iloc[(idx - input_step):idx]
 			pred_data = input_data.ewm(alpha=config.FUTURE_PREDICTION_ALPHA, adjust=False).mean().values
@@ -303,4 +339,8 @@ def get_future_prediction_data():
 	return jsonify(resp)
 
 if __name__ == '__main__':
-	app.run(debug=True, port=8000)
+	if debug_mode:
+		app.run(debug=True, port=8000)
+	else:
+		app.run(host='0.0.0.0', port=5003, debug=True)
+	

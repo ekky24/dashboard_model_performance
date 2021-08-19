@@ -1,3 +1,4 @@
+from numpy.lib.type_check import real
 import pandas as pd
 import numpy as np
 import sqlalchemy as db
@@ -18,9 +19,12 @@ def get_tag_sensor_mapping(engine):
 	return result_df
 
 def get_realtime_data(engine, tag_name, start_date, end_date, resample_min):
-	query = f"SELECT f_address_no, f_date_rec, f_value FROM tb_raw_history WHERE f_address_no = \
+	query = f"SELECT f_address_no, f_date_rec, f_value FROM tb_bulk_history WHERE f_address_no = \
 		'{tag_name}' AND cast(f_date_rec as date) BETWEEN '{start_date}' AND '{end_date}'"
 	realtime_df = pd.read_sql(query, con=engine)
+
+	if realtime_df.empty:
+		raise Exception('Data is unavailable.')
 
 	realtime_df["f_value"] = pd.to_numeric(realtime_df["f_value"])
 	realtime_df = pd.pivot_table(realtime_df, values='f_value', index='f_date_rec', \
@@ -36,6 +40,10 @@ def get_anomaly_fn(engine, tag_name, start_date, end_date, resample_min):
 		tb_rb_anomaly_history WHERE f_tag_name = '{tag_name}' AND cast(f_timestamp as date) \
 		BETWEEN '{start_date}' AND '{end_date}'"
 	result_df = pd.read_sql(query, con=engine)
+
+	if result_df.empty:
+		raise Exception('Data is unavailable.')
+
 	result_df["f_value"] = pd.to_numeric(result_df["f_value"])
 	result_df["f_lower_limit"] = pd.to_numeric(result_df["f_lower_limit"])
 	result_df["f_upper_limit"] = pd.to_numeric(result_df["f_upper_limit"])
@@ -59,6 +67,9 @@ def get_future_prediction_fn(engine, tag_name, start_date, end_date, resample_mi
 		tb_rb_insight_lstm WHERE f_tag_name = '{tag_name}' AND cast(f_date_rec as date) \
 		BETWEEN '{start_date}' AND '{end_date}'"
 	result_df = pd.read_sql(query, con=engine)
+	
+	if result_df.empty:
+		raise Exception('Data is unavailable.')
 
 	result_df["f_value"] = pd.to_numeric(result_df["f_value"])
 	result_df.set_index('f_timestamp', inplace=True)

@@ -1,3 +1,5 @@
 /credentials
 /statics/vendor
 /models
+/temp
+/.k8s

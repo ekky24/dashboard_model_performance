@@ -30,3 +30,7 @@
     width: 2.5rem;
     height: auto;
 }
+
+.card-body {
+    min-height: auto;
+}
