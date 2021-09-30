@@ -1,0 +1,36 @@
+{% extends "main.html" %}
+
+{% block content %}
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Survival Analysis</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+
+        <!-- Prediction Chart -->
+        <div class="col-xl-12">
+            <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div
+                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Survival Graph</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div id="survival-graph">
+                        <p class="text-center intro-text">Please select an option...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block additional_script %}
+
+    <script src="{{ url_for('static', filename='js/survival_analysis.js') }}"></script>
+
+{% endblock %}

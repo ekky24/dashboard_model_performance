@@ -77,5 +77,17 @@ def get_future_prediction_fn(engine, tag_name, start_date, end_date, resample_mi
 
 	return result_df
 
+def get_survival_data(engine, equipment, n_prediction):
+	query = f"SELECT te.f_equipment_id, te.f_equipment_name, ts.f_timestamp, ts.f_survival_type, ts.f_value \
+		FROM tb_rb_survival ts INNER JOIN db_soket.tb_im_equipments te ON te.f_equipment_id = ts.f_equipment_id \
+		WHERE te.f_equipment_name = '{equipment}'"
+	result_df = pd.read_sql(query, con=engine)
+	result_df["f_value"] = pd.to_numeric(result_df["f_value"])
+	result_df.set_index('f_timestamp', inplace=True)
+	result_df.sort_index(ascending=True, inplace=True)
+	result_df.tail(n_prediction)
+
+	return result_df
+
 def close_conn(engine):
 	engine.dispose()

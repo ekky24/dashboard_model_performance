@@ -8,7 +8,7 @@ import simplejson
 import datetime
 
 from utils.data_connector import set_conn, get_tag_sensor_mapping, get_realtime_data, \
-	get_future_prediction_fn, get_anomaly_fn, close_conn
+	get_future_prediction_fn, get_anomaly_fn, get_survival_data, close_conn
 from credentials.db_credentials import DB_UNIT_MAPPER
 from utils.data_cleaner import handle_nan_in_sensor_df, outlier_calculator
 import config
@@ -16,7 +16,7 @@ import os
 import glob
 import sys
 
-debug_mode = False
+debug_mode = True
 
 app = Flask(__name__, static_folder="statics")
 app.secret_key = 'dashboard_model_performance'
@@ -32,6 +32,10 @@ def anomaly_detection():
 @app.route('/future_prediction')
 def future_prediction():
 	return render_template('future-prediction.html')
+
+@app.route('/survival_analysis')
+def survival_analysis():
+	return render_template('survival-analysis.html')
 
 @app.route('/get_sensor_mapping')
 def get_sensor_mapping():
@@ -335,6 +339,47 @@ def get_future_prediction_data():
 		resp['data']['metrics']['index'] = metrics_index
 		resp['data']['metrics']['data'] = metrics_data
 		resp['data']['metrics']['ovr_loss'] = ovr_loss
+
+	except Exception as e:
+		resp['status'] = 'failed'
+		resp['data'] = str(e)
+		print(f'{str(e)} on line {sys.exc_info()[-1].tb_lineno}')
+
+	return jsonify(resp)
+
+@app.route('/get_survival_analysis_data')
+def get_survival_analysis_data():
+	resp = {'status': 'failed','data': 'none'}
+
+	try:
+		req_data = dict(request.values)
+		unit = req_data['unit']
+		equipment = req_data['equipment']
+
+		engine = set_conn(unit)
+		survival_df = get_survival_data(engine, equipment, config.SURVIVAL_N_PREDICTION)
+		close_conn(engine)
+
+		prediction_dict = {
+			'timestamp': [],
+			'value': [],
+		}
+
+		for i in range(config.SURVIVAL_N_PREDICTION):
+			curr_row = survival_df.iloc[i]
+			curr_idx = survival_df.index[i]
+			prediction_dict['timestamp'].append(curr_idx)
+			prediction_dict['value'].append(curr_row['f_value'])
+
+		prediction_df = pd.DataFrame(prediction_dict)
+		prediction_df.set_index('timestamp', inplace=True)
+		
+		resp['status'] = 'success'
+		resp['data'] = {}
+		
+		resp['data']['prediction'] = {}
+		resp['data']['prediction']['data'] = prediction_df.to_dict(orient='split')
+		resp['data']['prediction']['equipment_name'] = equipment
 
 	except Exception as e:
 		resp['status'] = 'failed'
