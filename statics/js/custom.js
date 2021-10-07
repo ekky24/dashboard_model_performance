@@ -25,7 +25,7 @@ $(document).ready(function() {
 		unit_value = $('#select-unit').val()
 		system_value = $('#select-system').val()
 		equipment_value = $('#select-equipment').val()
-		tag_value = $('#select-tag').val()
+		tag_value = tag_elem.val()
 		
 		if(elem.target.id == 'select-unit') {
 			systems = []
@@ -38,7 +38,7 @@ $(document).ready(function() {
 			systems = systems.unique();
 			$('#select-system').empty().append(new Option());
 			$('#select-equipment').empty().append(new Option());
-			$('#select-tag').empty().append(new Option());
+			tag_elem.empty().append(new Option());
 			for (let index = 0; index < systems.length; index++) {
 				$('#select-system').append(new Option(systems[index], systems[index]));
 			}
@@ -55,7 +55,7 @@ $(document).ready(function() {
 
 			equipments = equipments.unique();
 			$('#select-equipment').empty().append(new Option());
-			$('#select-tag').empty().append(new Option());
+			tag_elem.empty().append(new Option());
 			for (let index = 0; index < equipments.length; index++) {
 				$('#select-equipment').append(new Option(equipments[index], equipments[index]));
 			}
@@ -72,14 +72,21 @@ $(document).ready(function() {
 			}
 
 			tags = tags.unique();
-			$('#select-tag').empty().append(new Option());
+			tag_elem.empty().append(new Option());
 			for (let index = 0; index < tags.length; index++) {
-				$('#select-tag').append(new Option(tags[index], tags[index]));
+				tag_elem.append(new Option(tags[index], tags[index]));
 			}
 		}
 	}
 
 	/* ***************************************** */
+	
+	if(window.location.pathname.includes('validation')) {
+		var tag_elem = $('#select-tags')
+	}
+	else {
+		var tag_elem = $('#select-tag')
+	}
 	
 	$('.searchable-select').select2({
 		placeholder: "Select an option",

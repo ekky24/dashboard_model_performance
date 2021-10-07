@@ -3,3 +3,4 @@
 /models
 /temp
 /.k8s
+/trained_models

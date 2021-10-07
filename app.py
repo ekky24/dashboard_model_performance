@@ -9,6 +9,8 @@ import datetime
 
 from utils.data_connector import set_conn, get_tag_sensor_mapping, get_realtime_data, \
 	get_future_prediction_fn, get_anomaly_fn, get_survival_data, close_conn
+from utils.anomaly_predictor import calculate_limits, get_historian_data, get_model, \
+	create_lstm_sequence, flatten_to_2d, detect_anomalies
 from credentials.db_credentials import DB_UNIT_MAPPER
 from utils.data_cleaner import handle_nan_in_sensor_df, outlier_calculator
 import config
@@ -36,6 +38,10 @@ def future_prediction():
 @app.route('/survival_analysis')
 def survival_analysis():
 	return render_template('survival-analysis.html')
+
+@app.route('/anomaly_validation')
+def anomaly_validation():
+	return render_template('anomaly-detection-validation.html')
 
 @app.route('/get_sensor_mapping')
 def get_sensor_mapping():
@@ -380,6 +386,79 @@ def get_survival_analysis_data():
 		resp['data']['prediction'] = {}
 		resp['data']['prediction']['data'] = prediction_df.to_dict(orient='split')
 		resp['data']['prediction']['equipment_name'] = equipment
+
+	except Exception as e:
+		resp['status'] = 'failed'
+		resp['data'] = str(e)
+		print(f'{str(e)} on line {sys.exc_info()[-1].tb_lineno}')
+
+	return jsonify(resp)
+
+@app.route('/get_anomaly_detection_validation_data')
+def get_anomaly_detection_validation_data():
+	resp = {'status': 'failed','data': 'none'}
+
+	try:
+		req_data = dict(request.values)
+		unit = req_data['unit']
+		system = req_data['system']
+		equipment = req_data['equipment']
+		tags = req_data['tag']
+		tags = tags.split(',')
+		date_range = req_data['date_range']
+
+		tags = [tag.replace('/','_') for tag in tags]
+
+		raw_start_date = date_range.split(' - ')[0]
+		raw_start_date = raw_start_date.split('/')
+		start_date = f'{raw_start_date[2]}-{raw_start_date[1]}-{raw_start_date[0]}'
+
+		raw_end_date = date_range.split(' - ')[1]
+		raw_end_date = raw_end_date.split('/')
+		end_date = f'{raw_end_date[2]}-{raw_end_date[1]}-{raw_end_date[0]}'
+
+		historian_df = get_historian_data(unit, system, equipment, start_date, end_date)
+		scaler, models = get_model(unit, system, equipment, tags)
+		scaled_historian_data = scaler.transform(historian_df)
+		scaled_historian_df = pd.DataFrame(scaled_historian_data, \
+			columns=historian_df.columns, index=historian_df.index)
+		scaled_historian_df = scaled_historian_df[tags]
+		y_preds = np.zeros(historian_df.shape)
+		y_preds = y_preds[1:]
+
+		for idx, tag in enumerate(tags):
+			scaled_historian_lstm = create_lstm_sequence(scaled_historian_df[[tag]].values)
+			scaled_y_pred = models[tag].predict(scaled_historian_lstm)
+			scaled_y_pred = flatten_to_2d(scaled_y_pred)
+
+			y_preds[:, idx] = scaled_y_pred[:, 0]
+		
+		y_preds = scaler.inverse_transform(y_preds)
+		y_preds_df = pd.DataFrame(y_preds, columns=historian_df.columns, \
+			index=historian_df.index[1:])
+
+		historian_df = historian_df[tags]
+		y_preds_df = y_preds_df[tags]
+			
+		diff_shape = np.abs(historian_df.shape[0] - y_preds_df.shape[0])
+		historian_df = historian_df.iloc[diff_shape:]
+
+		LL_df, UL_df = calculate_limits(historian_df, y_preds_df)
+		anomaly_lower_df, anomaly_upper_df = detect_anomalies(historian_df, LL_df, UL_df)
+		
+		resp['status'] = 'success'
+		resp['data'] = {}
+
+		resp['data']['realtime'] = historian_df.to_dict(orient='split')
+		resp['data']['autoencoder'] = y_preds_df.to_dict(orient='split')
+		resp['data']['lower_limit'] = LL_df.to_dict(orient='split')
+		resp['data']['upper_limit'] = UL_df.to_dict(orient='split')
+		resp['data']['anomaly_lower'] = simplejson.dumps(anomaly_lower_df.to_dict(orient='split'), \
+			ignore_nan=True, default=datetime.datetime.isoformat)
+		resp['data']['anomaly_upper'] = simplejson.dumps(anomaly_upper_df.to_dict(orient='split'), \
+			ignore_nan=True, default=datetime.datetime.isoformat)
+
+		resp['data']['tags'] = tags
 
 	except Exception as e:
 		resp['status'] = 'failed'

@@ -1,0 +1,51 @@
+{% extends "main.html" %}
+
+{% block content %}
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Anomaly Detection Validation</h1>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+
+        <div class="col-xl-12 text-center">
+            <div class="card shadow mb-4">
+                <!-- Card Body -->
+                <div class="card-body">
+                    <select id="select-tags" class="w-100" name="tags[]" multiple='multiple'>
+                        <option></option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+
+        <!-- Prediction Chart -->
+        <div class="col-xl-12">
+            <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div
+                    class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Control Limits Estimation</h6>
+                </div>
+                <!-- Card Body -->
+                <div id="card-body-anomaly" class="card-body">
+                    <div id="anomaly-graph">
+                        <p class="text-center intro-text">Please select an option...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block additional_script %}
+
+    <script src="{{ url_for('static', filename='js/anomaly_detection_validation.js') }}"></script>
+
+{% endblock %}
