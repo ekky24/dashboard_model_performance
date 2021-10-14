@@ -6,7 +6,7 @@ from tensorflow.keras.models import load_model
 from sklearn.metrics import mean_absolute_error
 
 def get_historian_data(unit, system, equipment, start_date, end_date):
-	historian_path = f"data/{config.UNIT_NAME_MAPPER[unit]}/{system}/{equipment}.csv"
+	historian_path = f"{config.HISTORIAN_DATA_FOLDER}/{unit}/{system}/{equipment}.csv"
 	historian_df = pd.read_csv(historian_path, index_col='timestamp', parse_dates=['timestamp'])
 	historian_df = historian_df.loc[start_date:end_date]
 	historian_df = historian_df.resample(f'{config.ANOMALY_RESAMPLE_MIN}min').mean()

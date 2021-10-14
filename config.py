@@ -10,6 +10,7 @@ SURVIVAL_N_PREDICTION = 365
 
 OUTLIER_SIGMA = 3
 TEMP_FOLDER = 'temp'
+HISTORIAN_DATA_FOLDER = 'data/historian_data'
 
 UNIT_NAME_MAPPER = {
     'PLTU Pacitan 1': 'UJPCT1'
