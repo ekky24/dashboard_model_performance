@@ -52,6 +52,7 @@ $(document).ready(function() {
                         upper_limit_graph_data = [];
                         anomaly_lower_graph_data = [];
                         anomaly_upper_graph_data = [];
+                        index_graph_data = [];
 
                         for (let index = 0; index < realtime_data.length; index++) {
                             realtime_graph_data.push(realtime_data[index][tag_index]);
@@ -60,12 +61,13 @@ $(document).ready(function() {
                             upper_limit_graph_data.push(upper_limit_data[index][tag_index]);
                             anomaly_lower_graph_data.push(anomaly_lower_data[index][tag_index]);
                             anomaly_upper_graph_data.push(anomaly_upper_data[index][tag_index]);
+                            index_graph_data.push(new Date(index_data[index]));
                         } 
 
                         /* Plotting Control Limits */
                         var control_limit_graph = [
                             {
-                                x: index_data,
+                                x: index_graph_data,
                                 y: realtime_graph_data,
                                 type: 'scatter',
                                 name: 'Actual',
@@ -74,7 +76,7 @@ $(document).ready(function() {
                                 }
                             },
                             {
-                                x: index_data,
+                                x: index_graph_data,
                                 y: lower_limit_graph_data,
                                 type: 'scatter',
                                 name: 'Lower Limit',
@@ -85,7 +87,7 @@ $(document).ready(function() {
                                 }
                             },
                             {
-                                x: index_data,
+                                x: index_graph_data,
                                 y: upper_limit_graph_data,
                                 type: 'scatter',
                                 name: 'Upper Limit',
@@ -96,27 +98,37 @@ $(document).ready(function() {
                                 }
                             },
                             {
-                                x: index_data,
+                                x: index_graph_data,
                                 y: anomaly_lower_graph_data,
                                 type: 'scatter',
                                 name: 'Anomaly Lower',
+                                mode: 'markers',
                                 marker: {
-                                    color: 'rgba(231, 74, 59, 0.95)'
+                                    color: 'rgba(231, 74, 59, 1)',
+                                    size: 10,
                                 }
                             },
                             {
-                                x: index_data,
+                                x: index_graph_data,
                                 y: anomaly_upper_graph_data,
                                 type: 'scatter',
                                 name: 'Anomaly Upper',
+                                mode: 'markers',
                                 marker: {
-                                    color: 'rgba(231, 74, 59, 0.95)'
+                                    color: 'rgba(231, 74, 59, 1)',
+                                    size: 10,
                                 }
                             },
                         ];
 
                         var control_limit_layout = {
                             title: tags[tag_index],
+                            xaxis: {
+                                type: 'date',
+                                tick0: index_graph_data,
+                                tickmode: 'linear',
+                                dtick: 24*60*60*1000,
+                            },
                             yaxis: {
                                 showline: false
                             },

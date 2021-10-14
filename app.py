@@ -425,15 +425,17 @@ def get_anomaly_detection_validation_data():
 		scaled_historian_df = scaled_historian_df[tags]
 		y_preds = np.zeros(historian_df.shape)
 		y_preds = y_preds[1:]
+		y_preds_df = pd.DataFrame(y_preds, columns=historian_df.columns, \
+			index=historian_df.index[1:])
 
 		for idx, tag in enumerate(tags):
 			scaled_historian_lstm = create_lstm_sequence(scaled_historian_df[[tag]].values)
 			scaled_y_pred = models[tag].predict(scaled_historian_lstm)
 			scaled_y_pred = flatten_to_2d(scaled_y_pred)
 
-			y_preds[:, idx] = scaled_y_pred[:, 0]
+			y_preds_df.loc[:, tag] = scaled_y_pred[:, 0]
 		
-		y_preds = scaler.inverse_transform(y_preds)
+		y_preds = scaler.inverse_transform(y_preds_df)
 		y_preds_df = pd.DataFrame(y_preds, columns=historian_df.columns, \
 			index=historian_df.index[1:])
 
@@ -441,7 +443,7 @@ def get_anomaly_detection_validation_data():
 		y_preds_df = y_preds_df[tags]
 			
 		diff_shape = np.abs(historian_df.shape[0] - y_preds_df.shape[0])
-		historian_df = historian_df.iloc[diff_shape:]
+		historian_df = historian_df.iloc[diff_shape:]		
 
 		LL_df, UL_df = calculate_limits(historian_df, y_preds_df)
 		anomaly_lower_df, anomaly_upper_df = detect_anomalies(historian_df, LL_df, UL_df)
