@@ -19,12 +19,14 @@ def get_model(unit, system, equipment, tags):
 	equipment = equipment.replace('&', 'AND')
 	model_path = f'trained_models/anomaly_detection/{config.UNIT_NAME_MAPPER[unit]}/{system}/{equipment}'
 	scaler = joblib.load(f'{model_path}/scaler_univariate_{equipment}.pkl')
+	sensor_list = pd.read_csv(f'{model_path}/sensor_list_{equipment}.csv')
+	sensor_list = sensor_list.iloc[:,0].values
 
 	models = {}
 	for tag in tags:
 		models[tag] = load_model(f'{model_path}/model_{equipment}_{tag}.h5')
 
-	return scaler, models
+	return scaler, sensor_list, models
 
 def calculate_limits(y_true_df, y_pred_df, sigma=2.576):
 	LLs = np.zeros(y_true_df.shape)

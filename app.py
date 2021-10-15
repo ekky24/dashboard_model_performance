@@ -418,7 +418,8 @@ def get_anomaly_detection_validation_data():
 		end_date = f'{raw_end_date[2]}-{raw_end_date[1]}-{raw_end_date[0]}'
 
 		historian_df = get_historian_data(unit, system, equipment, start_date, end_date)
-		scaler, models = get_model(unit, system, equipment, tags)
+		scaler, sensor_list, models = get_model(unit, system, equipment, tags)
+		historian_df = historian_df[sensor_list]
 		scaled_historian_data = scaler.transform(historian_df)
 		scaled_historian_df = pd.DataFrame(scaled_historian_data, \
 			columns=historian_df.columns, index=historian_df.index)
