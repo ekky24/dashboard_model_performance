@@ -18,7 +18,7 @@ import os
 import glob
 import sys
 
-debug_mode = False
+debug_mode = True
 
 app = Flask(__name__, static_folder="statics")
 app.secret_key = 'dashboard_model_performance'
@@ -57,6 +57,7 @@ def get_sensor_mapping():
 		
 		if len(equipment_mapping_files) > 0:
 			equipment_mapping_df = pd.read_csv(f'{equipment_mapping_files[0]}')
+			equipment_mapping_df.dropna(inplace=True)
 		else:
 			engine = set_conn('DB_SOKET')
 			equipment_mapping_df = get_tag_sensor_mapping(engine)
@@ -106,7 +107,7 @@ def get_raw_data():
 		else:
 			end_time = f'{end_date} 23:59:59'
 
-		engine = set_conn(unit)
+		engine = set_conn(config.UNIT_NAME_MAPPER[unit])
 		realtime_df = get_realtime_data(engine, tag_name, start_date, \
 			end_date, config.RAW_DATA_RESAMPLE_MIN)
 		close_conn(engine)
@@ -198,7 +199,7 @@ def get_anomaly_detection_data():
 		else:
 			end_time = f'{end_date} 23:59:59'
 
-		engine = set_conn(unit)
+		engine = set_conn(config.UNIT_NAME_MAPPER[unit])
 		realtime_df = get_realtime_data(engine, tag_name, start_date, end_date, config.ANOMALY_RESAMPLE_MIN)
 		autoencoder_df, lower_limit_df, upper_limit_df = get_anomaly_fn(engine, \
 			tag_name, start_date, end_date, config.ANOMALY_RESAMPLE_MIN)
@@ -284,7 +285,7 @@ def get_future_prediction_data():
 		###############################################################################
 		
 
-		engine = set_conn(unit)
+		engine = set_conn(config.UNIT_NAME_MAPPER[unit])
 		realtime_df = get_realtime_data(engine, tag_name, start_date, \
 			end_date, config.FUTURE_PREDICTION_RESAMPLE_MIN)
 		# prediction_df = get_future_prediction_fn(engine, tag_name, start_date, \
@@ -362,7 +363,7 @@ def get_survival_analysis_data():
 		unit = req_data['unit']
 		equipment = req_data['equipment']
 
-		engine = set_conn(unit)
+		engine = set_conn(config.UNIT_NAME_MAPPER[unit])
 		survival_df = get_survival_data(engine, equipment, config.SURVIVAL_N_PREDICTION)
 		close_conn(engine)
 

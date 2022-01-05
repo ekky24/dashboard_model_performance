@@ -34,16 +34,18 @@ $(document).ready(function() {
 
                     realtime_graph_data = [];
                     prediction_graph_data = [];
+                    index_graph_data = [];
                     
                     for (let index = 0; index < prediction_data.length; index++) {
                         realtime_graph_data.push(prediction_data[index][0]);
                         prediction_graph_data.push(prediction_data[index][1]);
+                        index_graph_data.push(new Date(index_data[index]));
                     } 
 
                     /* Plotting Prediction Plot */
                     var future_prediction_graph = [
                         {
-                            x: index_data.slice(0, input_step),
+                            x: index_graph_data.slice(0, input_step),
                             y: realtime_graph_data.slice(0, input_step),
                             type: 'scatter',
                             name: 'Actual',
@@ -52,7 +54,7 @@ $(document).ready(function() {
                             }
                         },
                         {
-                            x: index_data.slice(input_step-1, prediction_graph_data.length),
+                            x: index_graph_data.slice(input_step-1, prediction_graph_data.length),
                             y: prediction_graph_data.slice(input_step-1, prediction_graph_data.length),
                             type: 'scatter',
                             name: 'Prediction',
@@ -61,7 +63,7 @@ $(document).ready(function() {
                             }
                         },
                         {
-                            x: index_data.slice(input_step-1, realtime_graph_data.length),
+                            x: index_graph_data.slice(input_step-1, realtime_graph_data.length),
                             y: realtime_graph_data.slice(input_step-1, realtime_graph_data.length),
                             type: 'scatter',
                             name: 'Actual',
@@ -73,6 +75,12 @@ $(document).ready(function() {
 
                     var future_prediction_layout = {
                         title: tag_name,
+                        xaxis: {
+                            type: 'date',
+                            tick0: index_graph_data,
+                            tickmode: 'linear',
+                            dtick: 2*60*60*1000,
+                        },
                         yaxis: {
                             showline: false
                         },

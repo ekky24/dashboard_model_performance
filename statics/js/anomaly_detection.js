@@ -37,18 +37,20 @@ $(document).ready(function() {
                     autoencoder_graph_data = [];
                     lower_limit_graph_data = [];
                     upper_limit_graph_data = [];
+                    index_graph_data = [];
 
                     for (let index = 0; index < realtime_data.length; index++) {
                         realtime_graph_data.push(realtime_data[index][0]);
                         autoencoder_graph_data.push(autoencoder_data[index][0]);
                         lower_limit_graph_data.push(lower_limit_data[index][0]);
                         upper_limit_graph_data.push(upper_limit_data[index][0]);
+                        index_graph_data.push(new Date(index_data[index]));
                     } 
                     
                     /* Plotting Autoencoder Performance */
                     var autoencoder_graph = [
                         {
-                            x: index_data,
+                            x: index_graph_data,
                             y: realtime_graph_data,
                             type: 'scatter',
                             name: 'Actual',
@@ -57,7 +59,7 @@ $(document).ready(function() {
                             }
                         },
                         {
-                            x: index_data,
+                            x: index_graph_data,
                             y: autoencoder_graph_data,
                             type: 'scatter',
                             name: 'Prediction',
@@ -69,6 +71,12 @@ $(document).ready(function() {
 
                     var autoencoder_layout = {
                         title: data.data.realtime.columns[0],
+                        xaxis: {
+                            type: 'date',
+                            tick0: index_graph_data,
+                            tickmode: 'linear',
+                            dtick: 2*60*60*1000,
+                        },
                         yaxis: {
                             showline: false
                         },
@@ -79,7 +87,7 @@ $(document).ready(function() {
                     /* Plotting Control Limits */
                     var control_limit_graph = [
                         {
-                            x: index_data,
+                            x: index_graph_data,
                             y: realtime_graph_data,
                             type: 'scatter',
                             name: 'Actual',
@@ -88,7 +96,7 @@ $(document).ready(function() {
                             }
                         },
                         {
-                            x: index_data,
+                            x: index_graph_data,
                             y: lower_limit_graph_data,
                             type: 'scatter',
                             name: 'Lower Limit',
@@ -99,7 +107,7 @@ $(document).ready(function() {
                             }
                         },
                         {
-                            x: index_data,
+                            x: index_graph_data,
                             y: upper_limit_graph_data,
                             type: 'scatter',
                             name: 'Upper Limit',
@@ -113,6 +121,12 @@ $(document).ready(function() {
 
                     var control_limit_layout = {
                         title: data.data.realtime.columns[0],
+                        xaxis: {
+                            type: 'date',
+                            tick0: index_graph_data,
+                            tickmode: 'linear',
+                            dtick: 2*60*60*1000,
+                        },
                         yaxis: {
                             showline: false
                         },
@@ -135,6 +149,12 @@ $(document).ready(function() {
 
                     var metrics_layout = {
                         title: data.data.realtime.columns[0],
+                        xaxis: {
+                            type: 'date',
+                            tick0: index_graph_data,
+                            tickmode: 'linear',
+                            dtick: 2*60*60*1000,
+                        },
                         yaxis: {
                             showline: false
                         },
