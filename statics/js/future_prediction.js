@@ -35,11 +35,16 @@ $(document).ready(function() {
                     realtime_graph_data = [];
                     prediction_graph_data = [];
                     index_graph_data = [];
+                    metrics_graph_index = [];
                     
                     for (let index = 0; index < prediction_data.length; index++) {
                         realtime_graph_data.push(prediction_data[index][0]);
                         prediction_graph_data.push(prediction_data[index][1]);
                         index_graph_data.push(new Date(index_data[index]));
+                    } 
+
+                    for (let index = 0; index < metrics_data.length; index++) {
+                        metrics_graph_index.push(new Date(metrics_index[index]));
                     } 
 
                     /* Plotting Prediction Plot */
@@ -91,7 +96,7 @@ $(document).ready(function() {
                     /* Plotting Metrics */
                     var metrics_graph = [
                         {
-                            x: metrics_index,
+                            x: metrics_graph_index,
                             y: metrics_data,
                             type: 'scatter',
                             name: 'Loss',
@@ -103,6 +108,12 @@ $(document).ready(function() {
 
                     var metrics_layout = {
                         title: tag_name,
+                        xaxis: {
+                            type: 'date',
+                            tick0: metrics_graph_index,
+                            tickmode: 'linear',
+                            dtick: 2*60*60*1000,
+                        },
                         yaxis: {
                             showline: false,
                             tickformat: ',.3%',

@@ -38,6 +38,7 @@ $(document).ready(function() {
                     lower_limit_graph_data = [];
                     upper_limit_graph_data = [];
                     index_graph_data = [];
+                    metrics_graph_index = [];
 
                     for (let index = 0; index < realtime_data.length; index++) {
                         realtime_graph_data.push(realtime_data[index][0]);
@@ -45,6 +46,10 @@ $(document).ready(function() {
                         lower_limit_graph_data.push(lower_limit_data[index][0]);
                         upper_limit_graph_data.push(upper_limit_data[index][0]);
                         index_graph_data.push(new Date(index_data[index]));
+                    } 
+
+                    for (let index = 0; index < metrics_data.length; index++) {
+                        metrics_graph_index.push(new Date(metrics_index[index]));
                     } 
                     
                     /* Plotting Autoencoder Performance */
@@ -137,7 +142,7 @@ $(document).ready(function() {
                     /* Plotting Metrics */
                     var metrics_graph = [
                         {
-                            x: metrics_index,
+                            x: metrics_graph_index,
                             y: metrics_data,
                             type: 'scatter',
                             name: 'Loss',
@@ -151,7 +156,7 @@ $(document).ready(function() {
                         title: data.data.realtime.columns[0],
                         xaxis: {
                             type: 'date',
-                            tick0: index_graph_data,
+                            tick0: metrics_graph_index,
                             tickmode: 'linear',
                             dtick: 2*60*60*1000,
                         },
