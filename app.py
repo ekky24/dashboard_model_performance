@@ -227,7 +227,7 @@ def get_anomaly_detection_data():
 				curr_realtime = realtime_df.loc[metrics_timestamp[idx]:metrics_timestamp[idx+1]]
 				curr_autoencoder = autoencoder_df.loc[metrics_timestamp[idx]:metrics_timestamp[idx+1]]
 				metrics_data.append(mean_absolute_error(curr_realtime, curr_autoencoder))
-				metrics_index.append(row.strftime('%d/%m/%Y %H:%M:%S'))
+				metrics_index.append(row.strftime('%a, %d %b %Y %H:%M:%S'))
 
 		resp['status'] = 'success'
 		resp['data'] = {}
@@ -324,7 +324,7 @@ def get_future_prediction_data():
 			y_true = realtime_df.iloc[idx:(idx + output_step)].values
 			y_pred = pred_data
 			metrics_data.append(mean_absolute_percentage_error(y_true, y_pred))
-			metrics_index.append(realtime_df.index[idx])
+			metrics_index.append(realtime_df.index[idx].strftime('%a, %d %b %Y %H:%M:%S'))
 
 		prediction_df = pd.DataFrame(prediction_dict)
 		prediction_df.set_index('timestamp', inplace=True)
