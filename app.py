@@ -6,6 +6,7 @@ import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
 import simplejson
 import datetime
+import pytz
 
 from utils.data_connector import set_conn, get_tag_sensor_mapping, get_realtime_data, \
 	get_future_prediction_fn, get_anomaly_fn, get_survival_data, get_anomaly_interval_data, \
@@ -428,7 +429,7 @@ def get_anomaly_detection_bad_model_data():
 		else:
 			raise Exception('Time Interval is not correct.')
 
-		end_time = pd.Timestamp("today").round('5min')
+		end_time = pd.Timestamp.now(tz='Asia/Jakarta').round('5min')
 		start_time = end_time - datetime.timedelta(hours=time_interval)
 		left_index = pd.date_range(start=start_time, end=end_time, freq='5min')
 		left_df = pd.DataFrame(index=left_index)
