@@ -433,6 +433,7 @@ def get_anomaly_detection_bad_model_data():
 		start_time = end_time - datetime.timedelta(hours=time_interval)
 		left_index = pd.date_range(start=start_time, end=end_time, freq='5min')
 		left_df = pd.DataFrame(index=left_index)
+		left_df.index = left_df.index.tz_localize(None)
 
 		engine = set_conn(config.UNIT_NAME_MAPPER[unit])
 		interval_anomaly_df = get_anomaly_interval_data(engine, time_interval)
