@@ -72,6 +72,7 @@ $(document).ready(function() {
     // If current page is survival analysis, then disable selects
 	$(".navbar-date-picker").remove()
     $(".navbar-select-tag").remove()
+    $(".navbar-select-bad-model-time-interval").remove()
 
     /* Nav Items Configuration */
     $('.nav-item').removeClass("active");

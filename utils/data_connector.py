@@ -89,5 +89,23 @@ def get_survival_data(engine, equipment, n_prediction):
 
 	return result_df
 
+def get_anomaly_interval_data(engine, time_interval):
+	query = f"SELECT f_tag_name, f_timestamp, f_value, f_status_limit FROM \
+		tb_rb_anomaly WHERE f_equipment_id <> '0' AND f_timestamp >= NOW() - INTERVAL {time_interval} HOUR"
+	result_df = pd.read_sql(query, con=engine)
+
+	return result_df
+
+def get_sensor_information_from_unit(engine, unit):
+	query = f"SELECT u.f_unit_name, e.f_equipment_name_alt1 f_system, e.f_equipment_name f_equipment, \
+		t.f_tag_name f_tag_name, t.f_l1_alarm, t.f_h1_alarm FROM db_soket.tb_im_units u \
+		INNER JOIN db_soket.tb_im_equipments e \
+		ON u.f_unit_id = e.f_unit_id \
+		INNER JOIN db_soket.tb_im_tags t ON e.f_equipment_id = t.f_equipment_id \
+		WHERE u.f_unit_name = '{unit}'"
+	result_df = pd.read_sql(query, con=engine)
+
+	return result_df
+
 def close_conn(engine):
 	engine.dispose()

@@ -18,6 +18,10 @@
     width: 20rem !important;
 }
 
+.navbar-select-bad-model-time-interval {
+    width: 20rem !important;
+}
+
 .select2-container--default .select2-selection--single {
     border: none !important;
 }
@@ -33,4 +37,11 @@
 
 .card-body {
     min-height: auto;
+}
+
+@media (min-width: 768px) {
+    .modal-xl {
+        width: 90%;
+        max-width:1200px;
+    }
 }

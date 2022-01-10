@@ -147,6 +147,7 @@ $(document).ready(function() {
 
     // If current page is anomaly validation, then disable selects
     $(".navbar-select-tag").remove()
+    $(".navbar-select-bad-model-time-interval").remove()
 
     /* Nav Items Configuration */
     $('.nav-item').removeClass("active");

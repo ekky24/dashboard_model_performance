@@ -8,7 +8,8 @@ import simplejson
 import datetime
 
 from utils.data_connector import set_conn, get_tag_sensor_mapping, get_realtime_data, \
-	get_future_prediction_fn, get_anomaly_fn, get_survival_data, close_conn
+	get_future_prediction_fn, get_anomaly_fn, get_survival_data, get_anomaly_interval_data, \
+	get_sensor_information_from_unit, close_conn
 from utils.anomaly_predictor import calculate_limits, get_historian_data, get_model, \
 	create_lstm_sequence, flatten_to_2d, detect_anomalies
 from credentials.db_credentials import DB_UNIT_MAPPER
@@ -42,6 +43,10 @@ def survival_analysis():
 @app.route('/anomaly_validation')
 def anomaly_validation():
 	return render_template('anomaly-detection-validation.html')
+
+@app.route('/anomaly_detection_bad_model')
+def anomaly_detection_bad_model():
+	return render_template('anomaly-detection-bad-model.html')
 
 @app.route('/get_sensor_mapping')
 def get_sensor_mapping():
@@ -387,6 +392,104 @@ def get_survival_analysis_data():
 		resp['data']['prediction'] = {}
 		resp['data']['prediction']['data'] = prediction_df.to_dict(orient='split')
 		resp['data']['prediction']['equipment_name'] = equipment
+
+	except Exception as e:
+		resp['status'] = 'failed'
+		resp['data'] = str(e)
+		print(f'{str(e)} on line {sys.exc_info()[-1].tb_lineno}')
+
+	return jsonify(resp)
+
+@app.route('/get_anomaly_detection_bad_model_data')
+def get_anomaly_detection_bad_model_data():
+	resp = {'status': 'failed','data': 'none'}
+
+	try:
+		req_data = dict(request.values)
+		unit = req_data['unit']
+		time_interval = req_data['time_interval']
+
+		if time_interval == 'hour_3':
+			time_interval = 3
+		elif time_interval == 'hour_6':
+			time_interval = 6
+		elif time_interval == 'hour_12':
+			time_interval = 12
+		elif time_interval == 'hour_24':
+			time_interval = 24
+		else:
+			raise Exception('Time Interval is not correct.')
+
+		end_time = pd.Timestamp("today").round('5min')
+		start_time = end_time - datetime.timedelta(hours=time_interval)
+		left_index = pd.date_range(start=start_time, end=end_time, freq='5min')
+		left_df = pd.DataFrame(index=left_index)
+
+		engine = set_conn(config.UNIT_NAME_MAPPER[unit])
+		interval_anomaly_df = get_anomaly_interval_data(engine, time_interval)
+		sensor_information_df = get_sensor_information_from_unit(engine, unit)
+		sensor_information_df.set_index('f_tag_name', inplace=True)
+		close_conn(engine)
+
+		concated_anomaly_count_df = pd.pivot_table(interval_anomaly_df, values='f_status_limit', index='f_timestamp', columns='f_tag_name')
+		concated_anomaly_count_df = pd.merge(left_df, concated_anomaly_count_df, how='left', left_index=True, right_index=True)
+		concated_anomaly_count_df.fillna(1, inplace=True)
+		concated_anomaly_count_df.replace([1.0, 2.0], 1.0, inplace=True)
+
+		concated_autoencoder_df = pd.pivot_table(interval_anomaly_df, values='f_value', index='f_timestamp', columns='f_tag_name')
+		concated_autoencoder_df = pd.merge(left_df, concated_autoencoder_df, how='left', left_index=True, right_index=True)
+		concated_autoencoder_df.interpolate(inplace=True)
+		
+		# Rule 1: Get Anomaly Count
+		result_anomaly_count_df = concated_anomaly_count_df.sum(axis=0)
+		threshold_count = int(0.4 * len(left_df))
+
+		# Rule 2: H1 Alarm Checking
+		result_h1_df = pd.Series()
+		for col in concated_autoencoder_df.columns:
+			curr_h1 = sensor_information_df.loc[[col]].iloc[0]['f_h1_alarm']
+			curr_df = concated_autoencoder_df[concated_autoencoder_df[col] > curr_h1]
+			result_h1_df[col] = len(curr_df)
+
+		# Rule 3: L1 Alarm Checking
+		result_l1_df = pd.Series()
+		for col in concated_autoencoder_df.columns:
+			curr_l1 = sensor_information_df.loc[[col]].iloc[0]['f_l1_alarm']
+			curr_df = concated_autoencoder_df[concated_autoencoder_df[col] < curr_l1]
+			result_l1_df[col] = len(curr_df)
+
+		equipment_mapping_files = glob.glob(f'{config.TEMP_FOLDER}/*.csv')
+
+		if not session.get('is_load_equipment_mapping'):
+			for f in equipment_mapping_files:
+				os.remove(f)
+			equipment_mapping_files = []
+		
+		result_dict = {
+			'system': [],
+			'equipment': [],
+			'tagname': [],
+			'anomaly_count': [],
+			'h1_alarm_count': [],
+			'l1_alarm_count': [],
+		}
+		for col in list(result_anomaly_count_df.keys()):
+			curr_df = sensor_information_df.loc[[col]]
+
+			result_dict['system'].append(curr_df.iloc[0]['f_system'])
+			result_dict['equipment'].append(curr_df.iloc[0]['f_equipment'])
+			result_dict['tagname'].append(col)
+			result_dict['anomaly_count'].append(result_anomaly_count_df[col])
+			result_dict['h1_alarm_count'].append(result_h1_df[col])
+			result_dict['l1_alarm_count'].append(result_l1_df[col])
+
+		result_df = pd.DataFrame(result_dict)
+
+		final_result_df = result_df[(result_df['anomaly_count'] >= threshold_count) | 
+			(result_df['h1_alarm_count'] >= threshold_count) | (result_df['l1_alarm_count'] >= threshold_count)]
+		
+		resp['status'] = 'success'
+		resp['data'] = final_result_df.to_dict(orient='split')
 
 	except Exception as e:
 		resp['status'] = 'failed'
