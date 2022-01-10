@@ -39,6 +39,10 @@
     min-height: auto;
 }
 
+.modal {
+    overflow-y:auto;
+}
+
 @media (min-width: 768px) {
     .modal-xl {
         width: 90%;

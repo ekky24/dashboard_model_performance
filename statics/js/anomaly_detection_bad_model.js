@@ -3,6 +3,14 @@ $(document).ready(function() {
 	/* VARIABLE AND FUNCTION DEFINITIONS */
 
     function fetch_anomaly_detection_bad_model_data() {
+        $('#badModelDataTable').dataTable().fnClearTable();
+        $('#badModelDataTable').dataTable().fnDraw();
+        $('#badModelDataTable').dataTable().fnDestroy();
+
+        $('#badModelDataTable').dataTable({
+            "columnDefs": [{ "targets": -1, "data": null, "defaultContent": "<a class='btn btn-info btnView'>View</a>"}]
+        });
+
         unit_value = $('#select-unit').val();
         time_interval_value = $('#select-bad-model-time-interval').val();
 
@@ -36,7 +44,7 @@ $(document).ready(function() {
                             bad_model_data[index][4],
                             bad_model_data[index][5],
                         ]
-                        bad_model_table.fnAddData(newData);
+                        $('#badModelDataTable').dataTable().fnAddData(newData);
                     }
                 }
             }}).done(function() {
@@ -46,10 +54,15 @@ $(document).ready(function() {
     }
 
     function bad_model_table_clicked() {
+        $('#loading-modal').modal({
+            show: true,
+            backdrop: 'static', 
+            keyboard: false
+        });
         $('#autoencoder-graph').empty();
         $('#control-limit-graph').empty();
 
-        var data = bad_model_table.api().row($(this).parents('tr')).data();
+        var data = $('#badModelDataTable').dataTable().api().row($(this).parents('tr')).data();
         unit_value = $('#select-unit').val();
         var date = new Date();
         var date_range_value = moment(date).format('DD/MM/YYYY - DD/MM/YYYY');
@@ -176,6 +189,10 @@ $(document).ready(function() {
                 }
             }}).done(function() {
                 $('#loading-modal').modal('hide');
+                $('#chartModal').modal({
+                    show: true, 
+                    focus: true
+                });
             });
     }
 
@@ -187,7 +204,6 @@ $(document).ready(function() {
     $(".navbar-select-tag").remove()
     $(".navbar-date-picker").remove()
     $(".div-bad-model-time-interval").show()
-    $('#select-bad-model-time-interval').prop('selectedIndex', 0);
 
     /* Nav Items Configuration */
     $('.nav-item').removeClass("active");
@@ -199,8 +215,8 @@ $(document).ready(function() {
         placeholder: "Select an options",
     });
 
-    bad_model_table = $('#badModelDataTable').dataTable({
-        "columnDefs": [{ "targets": -1, "data": null, "defaultContent": "<a class='btn btn-info btnView' data-toggle='modal' data-target='#chartModal'>View</a>"}]
+    $('#select-unit').on('change', function() {
+        $("#select-bad-model-time-interval").val('').trigger('change')
     });
 
     $('#badModelDataTable tbody').on('click', '[class*=btnView]', bad_model_table_clicked);

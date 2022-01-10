@@ -55,27 +55,33 @@ def get_sensor_mapping():
 	try:
 		equipment_mapping_files = glob.glob(f'{config.TEMP_FOLDER}/*.csv')
 
-		if not session.get('is_load_equipment_mapping'):
-			for f in equipment_mapping_files:
-				os.remove(f)
-			equipment_mapping_files = []
+		# if not session.get('is_load_equipment_mapping'):
+		# 	for f in equipment_mapping_files:
+		# 		os.remove(f)
+		# 	equipment_mapping_files = []
 		
-		if len(equipment_mapping_files) > 0:
-			equipment_mapping_df = pd.read_csv(f'{equipment_mapping_files[0]}')
-			equipment_mapping_df.dropna(inplace=True)
-		else:
-			engine = set_conn('DB_SOKET')
-			equipment_mapping_df = get_tag_sensor_mapping(engine)
-			close_conn(engine)
+		if not session.get('equipment_mapping_data'):
+			if len(equipment_mapping_files) > 0:
+				equipment_mapping_df = pd.read_csv(f'{equipment_mapping_files[0]}')
+				equipment_mapping_df.dropna(inplace=True)
+			else:
+				engine = set_conn('DB_SOKET')
+				equipment_mapping_df = get_tag_sensor_mapping(engine)
+				close_conn(engine)
 
-			curr_timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M')
-			equipment_mapping_df.dropna(inplace=True)
-			equipment_mapping_df.to_csv(f'{config.TEMP_FOLDER}/equipment_mapping_{curr_timestamp}.csv', \
-				index=False)
+				curr_timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M')
+				equipment_mapping_df.dropna(inplace=True)
+				equipment_mapping_df.to_csv(f'{config.TEMP_FOLDER}/equipment_mapping_{curr_timestamp}.csv', \
+					index=False)
+			
+			serialized_obj = equipment_mapping_df.to_dict('list')
+			session['equipment_mapping_data'] = serialized_obj
+		else:
+			serialized_obj = session['equipment_mapping_data']
+			equipment_mapping_df = pd.DataFrame(serialized_obj)
 
 		resp['status'] = 'success'
 		resp['data'] = equipment_mapping_df.to_dict(orient='split')
-		session['is_load_equipment_mapping'] = True
 
 	except Exception as e:
 		resp['status'] = 'failed'
@@ -409,7 +415,9 @@ def get_anomaly_detection_bad_model_data():
 		unit = req_data['unit']
 		time_interval = req_data['time_interval']
 
-		if time_interval == 'hour_3':
+		if time_interval == 'hour_1':
+			time_interval = 1
+		elif time_interval == 'hour_3':
 			time_interval = 3
 		elif time_interval == 'hour_6':
 			time_interval = 6
