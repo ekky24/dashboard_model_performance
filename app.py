@@ -10,7 +10,7 @@ import pytz
 
 from utils.data_connector import set_conn, get_tag_sensor_mapping, get_realtime_data, \
 	get_future_prediction_fn, get_anomaly_fn, get_survival_data, get_anomaly_interval_data, \
-	get_sensor_information_from_unit, close_conn
+	get_sensor_information_from_unit, get_tag_alarm, close_conn
 from utils.anomaly_predictor import calculate_limits, get_historian_data, get_model, \
 	create_lstm_sequence, flatten_to_2d, detect_anomalies
 from credentials.db_credentials import DB_UNIT_MAPPER
@@ -204,10 +204,13 @@ def get_anomaly_detection_data():
 			end_time = f'{end_date} 23:59:59'
 
 		engine = set_conn(config.UNIT_NAME_MAPPER[unit])
+		engine_soket = set_conn('DB_SOKET')
 		realtime_df = get_realtime_data(engine, tag_name, start_date, end_date, config.ANOMALY_RESAMPLE_MIN)
 		autoencoder_df, lower_limit_df, upper_limit_df = get_anomaly_fn(engine, \
 			tag_name, start_date, end_date, config.ANOMALY_RESAMPLE_MIN)
+		l1_alarm, h1_alarm = get_tag_alarm(engine_soket, tag_name)
 		close_conn(engine)
+		close_conn(engine_soket)
 
 		realtime_df = handle_nan_in_sensor_df(realtime_df, config.ANOMALY_RESAMPLE_MIN, start_time, \
 			pd.Timestamp(end_time).round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
@@ -245,6 +248,10 @@ def get_anomaly_detection_data():
 		resp['data']['metrics']['index'] = metrics_index
 		resp['data']['metrics']['data'] = metrics_data
 		resp['data']['metrics']['ovr_loss'] = ovr_loss
+
+		resp['data']['alarm'] = {}
+		resp['data']['alarm']['l1_alarm'] = l1_alarm
+		resp['data']['alarm']['h1_alarm'] = h1_alarm
 
 	except Exception as e:
 		resp['status'] = 'failed'
@@ -441,32 +448,35 @@ def get_anomaly_detection_bad_model_data():
 		concated_autoencoder_df = pd.pivot_table(interval_anomaly_df, values='f_value', index='f_timestamp', columns='f_tag_name')
 		concated_autoencoder_df = pd.merge(left_df, concated_autoencoder_df, how='left', left_index=True, right_index=True)
 		concated_autoencoder_df.interpolate(inplace=True)
+
+		alarm_dict = {
+			'tagname': [],
+			'h1_alarm': [],
+			'l1_alarm': [],
+		}
 		
 		# Rule 1: Get Anomaly Count
 		result_anomaly_count_df = concated_anomaly_count_df.sum(axis=0)
 		threshold_count = int(0.4 * len(left_df))
 
-		# Rule 2: H1 Alarm Checking
+		# Rule 2: H1 Alarm Checking and Rule 3: L1 Alarm Checking
 		result_h1_df = pd.Series()
+		result_l1_df = pd.Series()
+
 		for col in concated_autoencoder_df.columns:
 			curr_h1 = sensor_information_df.loc[[col]].iloc[0]['f_h1_alarm']
-			curr_df = concated_autoencoder_df[concated_autoencoder_df[col] > curr_h1]
-			result_h1_df[col] = len(curr_df)
-
-		# Rule 3: L1 Alarm Checking
-		result_l1_df = pd.Series()
-		for col in concated_autoencoder_df.columns:
 			curr_l1 = sensor_information_df.loc[[col]].iloc[0]['f_l1_alarm']
-			curr_df = concated_autoencoder_df[concated_autoencoder_df[col] < curr_l1]
-			result_l1_df[col] = len(curr_df)
 
-		equipment_mapping_files = glob.glob(f'{config.TEMP_FOLDER}/*.csv')
+			curr_h1_df = concated_autoencoder_df[concated_autoencoder_df[col] > curr_h1]
+			result_h1_df[col] = len(curr_h1_df)
 
-		if not session.get('is_load_equipment_mapping'):
-			for f in equipment_mapping_files:
-				os.remove(f)
-			equipment_mapping_files = []
-		
+			curr_l1_df = concated_autoencoder_df[concated_autoencoder_df[col] < curr_l1]
+			result_l1_df[col] = len(curr_l1_df)
+
+			alarm_dict['tagname'].append(col)
+			alarm_dict['h1_alarm'].append(curr_h1)
+			alarm_dict['l1_alarm'].append(curr_l1)
+
 		result_dict = {
 			'system': [],
 			'equipment': [],
@@ -485,13 +495,17 @@ def get_anomaly_detection_bad_model_data():
 			result_dict['h1_alarm_count'].append(result_h1_df[col])
 			result_dict['l1_alarm_count'].append(result_l1_df[col])
 
+		alarm_df = pd.DataFrame(alarm_dict)
 		result_df = pd.DataFrame(result_dict)
 
 		final_result_df = result_df[(result_df['anomaly_count'] >= threshold_count) | 
 			(result_df['h1_alarm_count'] >= threshold_count) | (result_df['l1_alarm_count'] >= threshold_count)]
 		
 		resp['status'] = 'success'
-		resp['data'] = final_result_df.to_dict(orient='split')
+		resp['data'] = {}
+
+		resp['data']['bad_model_list'] = final_result_df.to_dict(orient='split')
+		# resp['data']['alarm_info'] = alarm_df.to_dict(orient='split')
 
 	except Exception as e:
 		resp['status'] = 'failed'

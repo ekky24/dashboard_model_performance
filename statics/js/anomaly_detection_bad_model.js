@@ -32,7 +32,7 @@ $(document).ready(function() {
                     $('#div-intro-text').remove();
                     $('#anomaly-bad-model-table').show();
 
-                    bad_model_data = data.data.data;
+                    bad_model_data = data.data.bad_model_list.data;
 
                     for (let index = 0; index < bad_model_data.length; index++) {
                         $("<a href='#' class='btn btn-info'>View</a>")
@@ -84,6 +84,21 @@ $(document).ready(function() {
                     metrics_data = data.data.metrics.data;
                     metrics_index = data.data.metrics.index;
                     metrics_ovr_loss = data.data.metrics.ovr_loss;
+
+                    l1_alarm = data.data.alarm.l1_alarm;
+                    h1_alarm = data.data.alarm.h1_alarm;
+                    l1_alarm_text = "L1 Alarm: Not Available";
+                    h1_alarm_text = "H1 Alarm: Not Available";
+
+                    if (l1_alarm != null) {
+                        l1_alarm_text = "L1 Alarm: " + String(l1_alarm);
+                    }
+
+                    if (h1_alarm != null) {
+                        h1_alarm_text = "H1 Alarm: " + String(h1_alarm);
+                    }
+
+                    alarm_text = l1_alarm_text + " | " + h1_alarm_text
                     
                     realtime_graph_data = [];
                     autoencoder_graph_data = [];
@@ -133,7 +148,17 @@ $(document).ready(function() {
                         yaxis: {
                             showline: false
                         },
-                        showlegend: false
+                        showlegend: false,
+                        annotations: [
+                            {
+                              x: 0.5,
+                              y: 1.15,
+                              xref: 'paper',
+                              yref: 'paper',
+                              text: alarm_text,
+                              showarrow: false
+                            },
+                        ]
                     };
                     Plotly.newPlot('autoencoder-graph', autoencoder_graph, autoencoder_layout);
 
@@ -183,7 +208,17 @@ $(document).ready(function() {
                         yaxis: {
                             showline: false
                         },
-                        showlegend: false
+                        showlegend: false,
+                        annotations: [
+                            {
+                              x: 0.5,
+                              y: 1.15,
+                              xref: 'paper',
+                              yref: 'paper',
+                              text: alarm_text,
+                              showarrow: false
+                            },
+                        ]
                     };
                     Plotly.newPlot('control-limit-graph', control_limit_graph, control_limit_layout);
                 }

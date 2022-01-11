@@ -62,6 +62,20 @@ def get_anomaly_fn(engine, tag_name, start_date, end_date, resample_min):
 
 	return autoencoder_df, lower_limit_df, upper_limit_df
 
+def get_tag_alarm(engine, tag_name):
+	l1_alarm = None
+	h1_alarm = None
+
+	query = f"SELECT f_tag_name, f_l1_alarm, f_h1_alarm FROM \
+		tb_im_tags WHERE f_tag_name = '{tag_name}'"
+	result_df = pd.read_sql(query, con=engine)
+
+	if not result_df.empty:
+		l1_alarm = result_df.iloc[0]['f_l1_alarm']
+		h1_alarm = result_df.iloc[0]['f_h1_alarm']
+	
+	return l1_alarm, h1_alarm
+
 def get_future_prediction_fn(engine, tag_name, start_date, end_date, resample_min):
 	query = f"SELECT f_tag_name, f_timestamp, f_value, f_insight_type FROM \
 		tb_rb_insight_lstm WHERE f_tag_name = '{tag_name}' AND cast(f_date_rec as date) \
