@@ -151,7 +151,8 @@ $(document).ready(function() {
 
     /* Nav Items Configuration */
     $('.nav-item').removeClass("active");
-    $('#nav-anomaly-detection-validation').addClass("active");
+    $('#nav-group-anomaly-detection').addClass("active");
+    $('#nav-validation-anomaly-detection').addClass("active");
 
     $('#select-tags').on('change', fetch_anomaly_detection_validation_data);
     $('#date-range-picker').on('apply.daterangepicker', fetch_anomaly_detection_validation_data);

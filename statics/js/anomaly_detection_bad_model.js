@@ -207,7 +207,8 @@ $(document).ready(function() {
 
     /* Nav Items Configuration */
     $('.nav-item').removeClass("active");
-    $('#nav-anomaly-detection-bad-model').addClass("active");
+    $('#nav-group-anomaly-detection').addClass("active");
+    $('#nav-bad-model-anomaly-detection').addClass("active");
 
     $('#select-bad-model-time-interval').on('change', fetch_anomaly_detection_bad_model_data);
 

@@ -180,7 +180,8 @@ $(document).ready(function() {
 
     /* Nav Items Configuration */
     $('.nav-item').removeClass("active");
-    $('#nav-anomaly-detection').addClass("active");
+    $('#nav-group-anomaly-detection').addClass("active");
+    $('#nav-realtime-anomaly-detection').addClass("active");
     $(".navbar-select-bad-model-time-interval").remove()
 
     $('#select-tag').on('change', fetch_anomaly_detection_data);

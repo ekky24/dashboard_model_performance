@@ -25,14 +25,24 @@
 
     <!-- Heading -->
     <div class="sidebar-heading">
-        Realtime
+        Type
     </div>
 
-    <!-- Nav Item - Charts -->
-    <li id="nav-anomaly-detection" class="nav-item">
-        <a class="nav-link" href="/anomaly_detection">
+    <li id="nav-group-anomaly-detection" class="nav-item">
+        <a class="nav-link" href="#" data-toggle="collapse" data-target="#collapseAnomalyDetection" aria-expanded="true"
+            aria-controls="collapseAnomalyDetection">
             <i class="fas fa-fw fa-exclamation-triangle"></i>
-            <span>Anomaly Detection</span></a>
+            <span>Anomaly Detection</span>
+        </a>
+        <div id="collapseAnomalyDetection" class="collapse" aria-labelledby="headingAnomalyDetection"
+            data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Sub Menu:</h6>
+                <a id="nav-realtime-anomaly-detection" class="collapse-item" href="/anomaly_detection">Realtime</a>
+                <a id="nav-bad-model-anomaly-detection" class="collapse-item" href="/anomaly_detection_bad_model">Bad Model Checking</a>
+                <a id="nav-validation-anomaly-detection" class="collapse-item" href="/anomaly_validation">Validation</a>
+            </div>
+        </div>
     </li>
 
     <!-- Nav Item - Tables -->
@@ -50,34 +60,7 @@
     </li>
 
     <!-- Divider -->
-    <!-- <hr class="sidebar-divider"> -->
-
-    <!-- Heading -->
-    <!-- <div class="sidebar-heading">
-        Validation
-    </div> -->
-
-    <!-- Nav Item - Tables -->
-    <!-- <li id="nav-anomaly-detection-validation" class="nav-item">
-        <a class="nav-link" href="/anomaly_validation">
-            <i class="fas fa-fw fa-check"></i>
-            <span>Anomaly Validation</span></a>
-    </li> -->
-
-    <!-- Divider -->
     <hr class="sidebar-divider d-none d-md-block">
-
-    <!-- Heading -->
-    <div class="sidebar-heading">
-        Bad Model Checking
-    </div>
-
-    <!-- Nav Item - Tables -->
-    <li id="nav-anomaly-detection-bad-model" class="nav-item">
-        <a class="nav-link" href="/anomaly_detection_bad_model">
-            <i class="fas fa-fw fa-exclamation-triangle"></i>
-            <span>Anomaly Detection</span></a>
-    </li>
 
 </ul>
 <!-- End of Sidebar -->
