@@ -20,7 +20,7 @@ import os
 import glob
 import sys
 
-debug_mode = True
+debug_mode = False
 
 app = Flask(__name__, static_folder="statics")
 app.secret_key = 'dashboard_model_performance'
@@ -236,6 +236,11 @@ def get_anomaly_detection_data():
 				metrics_data.append(mean_absolute_error(curr_realtime, curr_autoencoder))
 				metrics_index.append(row.strftime('%a, %d %b %Y %H:%M:%S'))
 
+		realtime_df.index = realtime_df.index.strftime('%a, %d %b %Y %H:%M:%S')
+		autoencoder_df.index = autoencoder_df.index.strftime('%a, %d %b %Y %H:%M:%S')
+		lower_limit_df.index = lower_limit_df.index.strftime('%a, %d %b %Y %H:%M:%S')
+		upper_limit_df.index = upper_limit_df.index.strftime('%a, %d %b %Y %H:%M:%S')
+
 		resp['status'] = 'success'
 		resp['data'] = {}
 		
@@ -428,7 +433,7 @@ def get_anomaly_detection_bad_model_data():
 		else:
 			raise Exception('Time Interval is not correct.')
 
-		end_time = pd.Timestamp.now(tz='Asia/Jakarta').round('5min')
+		end_time = pd.Timestamp.now(tz=config.TIMEZONE_MAPPER[unit]).round('5min')
 		start_time = end_time - datetime.timedelta(hours=time_interval)
 		left_index = pd.date_range(start=start_time, end=end_time, freq='5min')
 		left_df = pd.DataFrame(index=left_index)

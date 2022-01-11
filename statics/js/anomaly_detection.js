@@ -48,6 +48,8 @@ $(document).ready(function() {
                         index_graph_data.push(new Date(index_data[index]));
                     } 
 
+                    console.log(index_graph_data);
+
                     for (let index = 0; index < metrics_data.length; index++) {
                         metrics_graph_index.push(new Date(metrics_index[index]));
                     } 
