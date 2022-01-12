@@ -213,7 +213,7 @@ def get_anomaly_detection_data():
 		realtime_df = get_realtime_data(engine, tag_name, start_date, end_date, config.ANOMALY_RESAMPLE_MIN)
 		autoencoder_df, lower_limit_df, upper_limit_df = get_anomaly_fn(engine, \
 			tag_name, start_date, end_date, config.ANOMALY_RESAMPLE_MIN)
-		l1_alarm, h1_alarm = get_tag_alarm(engine_soket, tag_name)
+		l1_alarm, h1_alarm, tag_desc = get_tag_alarm(engine_soket, tag_name)
 		close_conn(engine)
 		close_conn(engine_soket)
 
@@ -262,6 +262,9 @@ def get_anomaly_detection_data():
 		resp['data']['alarm'] = {}
 		resp['data']['alarm']['l1_alarm'] = l1_alarm
 		resp['data']['alarm']['h1_alarm'] = h1_alarm
+
+		resp['data']['tag_info'] = {}
+		resp['data']['tag_info']['desc'] = tag_desc
 
 	except Exception as e:
 		resp['status'] = 'failed'
@@ -474,8 +477,12 @@ def get_anomaly_detection_bad_model_data():
 		result_l1_df = pd.Series()
 
 		for col in concated_autoencoder_df.columns:
-			curr_h1 = sensor_information_df.loc[[col]].iloc[0]['f_h1_alarm']
-			curr_l1 = sensor_information_df.loc[[col]].iloc[0]['f_l1_alarm']
+			try:
+				curr_h1 = sensor_information_df.loc[[col]].iloc[0]['f_h1_alarm']
+				curr_l1 = sensor_information_df.loc[[col]].iloc[0]['f_l1_alarm']
+			except KeyError:
+				curr_h1 = None
+				curr_l1 = None
 
 			curr_h1_df = concated_autoencoder_df[concated_autoencoder_df[col] > curr_h1]
 			result_h1_df[col] = len(curr_h1_df)
@@ -496,7 +503,10 @@ def get_anomaly_detection_bad_model_data():
 			'l1_alarm_count': [],
 		}
 		for col in list(result_anomaly_count_df.keys()):
-			curr_df = sensor_information_df.loc[[col]]
+			try:
+				curr_df = sensor_information_df.loc[[col]]
+			except KeyError:
+				continue
 
 			result_dict['system'].append(curr_df.iloc[0]['f_system'])
 			result_dict['equipment'].append(curr_df.iloc[0]['f_equipment'])

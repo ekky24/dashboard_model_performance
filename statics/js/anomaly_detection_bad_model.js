@@ -87,6 +87,7 @@ $(document).ready(function() {
 
                     l1_alarm = data.data.alarm.l1_alarm;
                     h1_alarm = data.data.alarm.h1_alarm;
+                    tag_desc = data.data.tag_info.desc;
                     l1_alarm_text = "L1 Alarm: Not Available";
                     h1_alarm_text = "H1 Alarm: Not Available";
 
@@ -152,11 +153,25 @@ $(document).ready(function() {
                         annotations: [
                             {
                               x: 0.5,
-                              y: 1.15,
+                              y: 1.16,
                               xref: 'paper',
                               yref: 'paper',
-                              text: alarm_text,
-                              showarrow: false
+                              text: tag_desc,
+                              showarrow: false,
+                              font: {
+                                size: 12,
+                              },
+                            },
+                            {
+                                x: 0.5,
+                                y: 1.06,
+                                xref: 'paper',
+                                yref: 'paper',
+                                text: alarm_text,
+                                showarrow: false,
+                                font: {
+                                  size: 10,
+                                },
                             },
                         ]
                     };
@@ -212,11 +227,25 @@ $(document).ready(function() {
                         annotations: [
                             {
                               x: 0.5,
-                              y: 1.15,
+                              y: 1.16,
                               xref: 'paper',
                               yref: 'paper',
-                              text: alarm_text,
-                              showarrow: false
+                              text: tag_desc,
+                              showarrow: false,
+                              font: {
+                                size: 12,
+                              },
+                            },
+                            {
+                                x: 0.5,
+                                y: 1.06,
+                                xref: 'paper',
+                                yref: 'paper',
+                                text: alarm_text,
+                                showarrow: false,
+                                font: {
+                                  size: 10,
+                                },
                             },
                         ]
                     };
