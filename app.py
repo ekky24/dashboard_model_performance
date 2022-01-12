@@ -199,7 +199,7 @@ def get_anomaly_detection_data():
 		raw_end_date = raw_end_date.split('/')
 		end_date = f'{raw_end_date[2]}-{raw_end_date[1]}-{raw_end_date[0]}'
 
-		curr_timestamp = datetime.datetime.now()
+		curr_timestamp = datetime.datetime.now(pytz.timezone(config.TIMEZONE_MAPPER[unit]))
 		curr_date = curr_timestamp.strftime('%Y-%m-%d')
 
 		if end_date == curr_date:
@@ -441,7 +441,7 @@ def get_anomaly_detection_bad_model_data():
 		end_time = pd.Timestamp.now(tz=config.TIMEZONE_MAPPER[unit]).round('5min')
 		start_time = end_time - datetime.timedelta(hours=time_interval)
 		left_index = pd.date_range(start=start_time, end=end_time, freq='5min')
-		left_df = pd.DataFrame(index=left_index)
+		left_df = pd.DataFrame(index=left_index[1:])
 		left_df.index = left_df.index.tz_localize(None)
 
 		engine = set_conn(config.UNIT_NAME_MAPPER[unit])
@@ -452,7 +452,7 @@ def get_anomaly_detection_bad_model_data():
 
 		concated_anomaly_count_df = pd.pivot_table(interval_anomaly_df, values='f_status_limit', index='f_timestamp', columns='f_tag_name')
 		concated_anomaly_count_df = pd.merge(left_df, concated_anomaly_count_df, how='left', left_index=True, right_index=True)
-		concated_anomaly_count_df.fillna(1, inplace=True)
+		# concated_anomaly_count_df.fillna(1, inplace=True)
 		concated_anomaly_count_df.replace([1.0, 2.0], 1.0, inplace=True)
 
 		concated_autoencoder_df = pd.pivot_table(interval_anomaly_df, values='f_value', index='f_timestamp', columns='f_tag_name')
