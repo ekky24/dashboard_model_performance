@@ -7,6 +7,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolu
 import simplejson
 import datetime
 import pytz
+from cachetools import cached, TTLCache
 
 from utils.data_connector import set_conn, get_tag_sensor_mapping, get_realtime_data, \
 	get_future_prediction_fn, get_anomaly_fn, get_survival_data, get_anomaly_interval_data, \
@@ -20,24 +21,11 @@ import os
 import glob
 import sys
 
-debug_mode = False
+debug_mode = True
 
 app = Flask(__name__, static_folder="statics")
 app.secret_key = 'dashboard_model_performance'
-
-equipment_mapping_files = glob.glob(f'{config.TEMP_FOLDER}/*.csv')
-if len(equipment_mapping_files) > 0:
-	equipment_mapping_df = pd.read_csv(f'{equipment_mapping_files[0]}')
-	equipment_mapping_df.dropna(inplace=True)
-else:
-	engine = set_conn('DB_SOKET')
-	equipment_mapping_df = get_tag_sensor_mapping(engine)
-	close_conn(engine)
-
-	curr_timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M')
-	equipment_mapping_df.dropna(inplace=True)
-	equipment_mapping_df.to_csv(f'{config.TEMP_FOLDER}/equipment_mapping_{curr_timestamp}.csv', \
-		index=False)
+cache = TTLCache(maxsize=5000, ttl=3600)
 
 @app.route('/')
 def home():
@@ -63,15 +51,32 @@ def anomaly_validation():
 def anomaly_detection_bad_model():
 	return render_template('anomaly-detection-bad-model.html')
 
+@cached(cache)
+def read_sensor_mapping():
+	equipment_mapping_files = glob.glob(f'{config.TEMP_FOLDER}/*.csv')
+	equipment_mapping_df = pd.read_csv(f'{equipment_mapping_files[0]}')
+	equipment_mapping_df.dropna(inplace=True)
+
+	return equipment_mapping_df
+
+@cached(cache)
 @app.route('/get_sensor_mapping')
 def get_sensor_mapping():
 	resp = {'status': 'failed','data': 'none'}
 
 	try:
-		# if not session.get('is_load_equipment_mapping'):
-		# 	for f in equipment_mapping_files:
-		# 		os.remove(f)
-		# 	equipment_mapping_files = []
+		equipment_mapping_files = glob.glob(f'{config.TEMP_FOLDER}/*.csv')
+		if len(equipment_mapping_files) > 0:
+			equipment_mapping_df = read_sensor_mapping()
+		else:
+			engine = set_conn('DB_SOKET')
+			equipment_mapping_df = get_tag_sensor_mapping(engine)
+			close_conn(engine)
+
+			curr_timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M')
+			equipment_mapping_df.dropna(inplace=True)
+			equipment_mapping_df.to_csv(f'{config.TEMP_FOLDER}/equipment_mapping_{curr_timestamp}.csv', \
+				index=False)
 
 		resp['status'] = 'success'
 		resp['data'] = equipment_mapping_df.to_dict(orient='split')
