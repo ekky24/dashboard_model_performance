@@ -107,7 +107,7 @@ def get_survival_data(engine, equipment, n_prediction):
 
 def get_anomaly_interval_data(engine, time_interval):
 	query = f"SELECT f_tag_name, f_timestamp, f_value, f_status_limit FROM \
-		tb_rb_anomaly WHERE f_equipment_id <> '0' AND f_timestamp >= NOW() - INTERVAL {time_interval} HOUR"
+		tb_rb_anomaly_history WHERE f_equipment_id <> '0' AND f_timestamp >= NOW() - INTERVAL {time_interval} HOUR"
 	result_df = pd.read_sql(query, con=engine)
 
 	return result_df

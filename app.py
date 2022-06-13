@@ -21,7 +21,7 @@ import os
 import glob
 import sys
 
-debug_mode = False
+debug_mode = True
 
 app = Flask(__name__, static_folder="statics")
 app.secret_key = 'dashboard_model_performance'
@@ -520,6 +520,12 @@ def get_anomaly_detection_bad_model_data():
 
 		final_result_df = result_df[(result_df['anomaly_count'] >= threshold_count) | 
 			(result_df['h1_alarm_count'] >= threshold_count) | (result_df['l1_alarm_count'] >= threshold_count)]
+
+		for f in glob.glob(f"{config.BAD_MODEL_LIST_DUMP_FOLDER}/{unit}*.csv"):
+			os.remove(f)
+		
+		result_filename = f'{unit}.csv'
+		final_result_df.to_csv(f'{config.BAD_MODEL_LIST_DUMP_FOLDER}/{result_filename}', index=False)
 		
 		resp['status'] = 'success'
 		resp['data'] = {}

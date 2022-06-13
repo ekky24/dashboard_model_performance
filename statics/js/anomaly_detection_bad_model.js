@@ -30,6 +30,7 @@ $(document).ready(function() {
                 }
                 else if(data.status == 'success') {
                     $('#div-intro-text').remove();
+                    $('#div-download-table').show();
                     $('#anomaly-bad-model-table').show();
 
                     bad_model_data = data.data.bad_model_list.data;

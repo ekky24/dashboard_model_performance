@@ -43,6 +43,11 @@
     overflow-y:auto;
 }
 
+.btn-download-table {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
 @media (min-width: 768px) {
     .modal-xl {
         width: 90%;

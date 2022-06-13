@@ -11,6 +11,8 @@ SURVIVAL_N_PREDICTION = 365
 OUTLIER_SIGMA = 3
 TEMP_FOLDER = 'temp'
 HISTORIAN_DATA_FOLDER = 'data/historian_data'
+BAD_MODEL_LIST_DUMP_FOLDER = 'result/bad_model_table_dump'
+HOST_URL = '35.219.48.62'
 
 UNIT_NAME_MAPPER = {
     'PLTU Paiton 1': 'UJPAITON1',
