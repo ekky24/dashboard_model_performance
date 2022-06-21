@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, request, jsonify, session
+from flask import Flask, render_template, url_for, request, jsonify, session, send_file
 from flask.globals import current_app
 from numpy.lib.type_check import real
 import pandas as pd
@@ -8,6 +8,7 @@ import simplejson
 import datetime
 import pytz
 from cachetools import cached, TTLCache
+import json
 
 from utils.data_connector import set_conn, get_tag_sensor_mapping, get_realtime_data, \
 	get_future_prediction_fn, get_anomaly_fn, get_survival_data, get_anomaly_interval_data, \
@@ -226,6 +227,10 @@ def get_anomaly_detection_data():
 		upper_limit_df = handle_nan_in_sensor_df(upper_limit_df, config.ANOMALY_RESAMPLE_MIN, \
 			start_time, pd.Timestamp(end_time).round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
 
+		anomaly_marker_df = realtime_df.copy()
+		anomaly_marker_df[((anomaly_marker_df[tag_name] <= upper_limit_df[tag_name]) & \
+			(anomaly_marker_df[tag_name] >= lower_limit_df[tag_name]))] = np.nan
+
 		ovr_loss = mean_absolute_error(realtime_df.values, autoencoder_df.values)
 		ovr_loss = round(ovr_loss, 3)
 
@@ -253,6 +258,7 @@ def get_anomaly_detection_data():
 		resp['data']['autoencoder'] = autoencoder_df.to_dict(orient='split')
 		resp['data']['lower_limit'] = lower_limit_df.to_dict(orient='split')
 		resp['data']['upper_limit'] = upper_limit_df.to_dict(orient='split')
+		resp['data']['anomaly_marker'] = anomaly_marker_df.replace(np.nan, 'null').to_dict(orient='split')
 
 		resp['data']['metrics'] = {}
 		resp['data']['metrics']['index'] = metrics_index
@@ -615,6 +621,36 @@ def get_anomaly_detection_validation_data():
 		print(f'{str(e)} on line {sys.exc_info()[-1].tb_lineno}')
 
 	return jsonify(resp)
+
+@app.route('/download_anomaly_detection_data', methods=['POST'])
+def download_anomaly_detection_data():
+	resp = {'status': 'failed','data': 'none'}
+
+	try:
+		req_data = dict(request.form)
+		req_data = json.loads(req_data['data'])
+		curr_date = datetime.datetime.now().strftime('%Y%m%d_%H%M')
+
+		df = pd.DataFrame(req_data)
+		df['index'] = pd.to_datetime(df['index']).dt.tz_localize(None)
+		df.loc[df['anomaly_marker'] == 'null', 'anomaly_marker'] = 'False'
+		df.loc[df['anomaly_marker'] != 'False', 'anomaly_marker'] = 'True'
+		df.rename(columns={
+			'index': 'date',
+			'anomaly_marker': 'is_anomaly',
+		}, inplace=True)
+		
+		df.to_csv(f'{config.ANOMALY_DETECTION_DUMP_FOLDER}/download_data.csv', index=False)
+	except Exception as e:
+		resp['status'] = 'failed'
+		resp['data'] = str(e)
+		print(f'{str(e)} on line {sys.exc_info()[-1].tb_lineno}')
+		return f'{str(e)} on line {sys.exc_info()[-1].tb_lineno}'
+
+	return send_file(f"{config.ANOMALY_DETECTION_DUMP_FOLDER}/download_data.csv",
+				mimetype='text/csv',
+				attachment_filename=f"{curr_date}_anomaly_data.csv",
+    			as_attachment=True)
 
 if __name__ == '__main__':
 	if debug_mode:

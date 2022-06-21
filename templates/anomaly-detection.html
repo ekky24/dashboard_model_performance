@@ -5,7 +5,13 @@
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">Anomaly Detection</h1>
     </div>
-
+    <div id="div-download-table" style="display: none;">
+        <form action="/download_anomaly_detection_data" method="POST">
+            <input id="download_params" type="hidden" name="data" value="">
+            <input id="download-table" type="submit" class="btn btn-primary btn-lg btn-download-table" value="Download Data">
+        </form>
+        <!-- <a id="download-table" href='#' class='btn btn-primary btn-lg btn-download-table'>Download Data</a> -->
+    </div>
     <!-- Content Row -->
     <div class="row">
 

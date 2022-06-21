@@ -22,12 +22,14 @@ $(document).ready(function() {
                 }
                 else if(data.status == 'success') {
                     $('.intro-text').remove();
+                    $('#div-download-table').show();
 
                     index_data = data.data.realtime.index;
                     realtime_data = data.data.realtime.data;
                     autoencoder_data = data.data.autoencoder.data;
                     lower_limit_data = data.data.lower_limit.data;
                     upper_limit_data = data.data.upper_limit.data;
+                    anomaly_marker_data = data.data.anomaly_marker.data;
 
                     metrics_data = data.data.metrics.data;
                     metrics_index = data.data.metrics.index;
@@ -37,6 +39,7 @@ $(document).ready(function() {
                     autoencoder_graph_data = [];
                     lower_limit_graph_data = [];
                     upper_limit_graph_data = [];
+                    anomaly_marker_graph_data = [];
                     index_graph_data = [];
                     metrics_graph_index = [];
 
@@ -45,10 +48,9 @@ $(document).ready(function() {
                         autoencoder_graph_data.push(autoencoder_data[index][0]);
                         lower_limit_graph_data.push(lower_limit_data[index][0]);
                         upper_limit_graph_data.push(upper_limit_data[index][0]);
+                        anomaly_marker_graph_data.push(anomaly_marker_data[index][0]);
                         index_graph_data.push(new Date(index_data[index]));
                     } 
-
-                    console.log(index_graph_data);
 
                     for (let index = 0; index < metrics_data.length; index++) {
                         metrics_graph_index.push(new Date(metrics_index[index]));
@@ -123,6 +125,15 @@ $(document).ready(function() {
                             marker: {
                                 color: 'rgba(50, 168, 82, 0.95)'
                             }
+                        },
+                        {
+                            x: index_graph_data,
+                            y: anomaly_marker_graph_data,
+                            mode: 'markers',
+                            name: 'Anomaly Marker',
+                            marker: {
+                                color: 'rgba(249, 76, 102, 0.95)'
+                            }
                         }
                     ];
 
@@ -168,6 +179,11 @@ $(document).ready(function() {
                         showlegend: false
                     };
                     Plotly.newPlot('metrics-graph', metrics_graph, metrics_layout);
+
+                    download_params = JSON.stringify({'index': index_graph_data, 'realtime': realtime_graph_data, 
+                    'autoencoder': autoencoder_graph_data, 'lower_limit': lower_limit_graph_data, 
+                    'upper_limit': upper_limit_graph_data, 'anomaly_marker': anomaly_marker_graph_data})
+                    $('#download_params').attr('value', download_params)
 
                     $('#ovr-metric-value').text(metrics_ovr_loss);
                     $('.metrics-caption').css('visibility', 'visible');
