@@ -50,7 +50,7 @@ $(document).ready(function() {
                         upper_limit_graph_data.push(upper_limit_data[index][0]);
                         anomaly_marker_graph_data.push(anomaly_marker_data[index][0]);
                         index_graph_data.push(new Date(index_data[index]));
-                    } 
+                    }
 
                     for (let index = 0; index < metrics_data.length; index++) {
                         metrics_graph_index.push(new Date(metrics_index[index]));
@@ -180,7 +180,8 @@ $(document).ready(function() {
                     };
                     Plotly.newPlot('metrics-graph', metrics_graph, metrics_layout);
 
-                    download_params = JSON.stringify({'index': index_graph_data, 'realtime': realtime_graph_data, 
+                    download_params = JSON.stringify({'unit': String(unit_value), 'tag_name': String(tag_value), 
+                    'index': index_graph_data, 'realtime': realtime_graph_data, 
                     'autoencoder': autoencoder_graph_data, 'lower_limit': lower_limit_graph_data, 
                     'upper_limit': upper_limit_graph_data, 'anomaly_marker': anomaly_marker_graph_data})
                     $('#download_params').attr('value', download_params)

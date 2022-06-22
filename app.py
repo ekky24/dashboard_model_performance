@@ -631,8 +631,15 @@ def download_anomaly_detection_data():
 		req_data = json.loads(req_data['data'])
 		curr_date = datetime.datetime.now().strftime('%Y%m%d_%H%M')
 
+		curr_unit = req_data['unit']
+		curr_tag_name = req_data['tag_name']
+		
 		df = pd.DataFrame(req_data)
-		df['index'] = pd.to_datetime(df['index']).dt.tz_localize(None)
+		df = df.drop(['unit', 'tag_name'], axis=1)
+		df['index'] = pd.to_datetime(df['index'])
+		df['index'] = df['index'].dt.tz_convert('Asia/Jakarta')
+		df['index'] = df['index'].dt.tz_localize(None)
+
 		df.loc[df['anomaly_marker'] == 'null', 'anomaly_marker'] = 'False'
 		df.loc[df['anomaly_marker'] != 'False', 'anomaly_marker'] = 'True'
 		df.rename(columns={
@@ -649,7 +656,7 @@ def download_anomaly_detection_data():
 
 	return send_file(f"{config.ANOMALY_DETECTION_DUMP_FOLDER}/download_data.csv",
 				mimetype='text/csv',
-				attachment_filename=f"{curr_date}_anomaly_data.csv",
+				attachment_filename=f"{curr_unit}_{curr_tag_name}_{curr_date}_anomaly.csv",
     			as_attachment=True)
 
 if __name__ == '__main__':
