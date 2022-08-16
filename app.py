@@ -22,7 +22,7 @@ import os
 import glob
 import sys
 
-debug_mode = True
+debug_mode = False
 
 app = Flask(__name__, static_folder="statics")
 app.secret_key = 'dashboard_model_performance'
