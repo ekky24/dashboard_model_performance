@@ -26,11 +26,14 @@ debug_mode = True
 
 app = Flask(__name__, static_folder="statics")
 app.secret_key = 'dashboard_model_performance'
-cache = TTLCache(maxsize=5000, ttl=3600)
 
 @app.route('/')
 def home():
 	return render_template('index.html')
+
+@app.route('/sensor_mapping')
+def sensor_mapping():
+	return render_template('sensor_mapping.html')
 
 @app.route('/anomaly_detection')
 def anomaly_detection():
@@ -52,7 +55,6 @@ def anomaly_validation():
 def anomaly_detection_bad_model():
 	return render_template('anomaly-detection-bad-model.html')
 
-@cached(cache)
 def read_sensor_mapping():
 	equipment_mapping_files = glob.glob(f'{config.TEMP_FOLDER}/*.csv')
 	equipment_mapping_df = pd.read_csv(f'{equipment_mapping_files[0]}')
@@ -60,20 +62,44 @@ def read_sensor_mapping():
 
 	return equipment_mapping_df
 
-@cached(cache)
+def get_modeled_tags():
+	modeled_tags_df = pd.DataFrame()
+	soks = os.listdir(f'{config.DATA_FOLDER}/modeled_tags')
+	for sok in soks:
+		temp_modeled_tags_file = glob.glob(f'{config.DATA_FOLDER}/modeled_tags/{sok}/*.csv')
+		temp_modeled_tags_df = pd.read_csv(f'{temp_modeled_tags_file[0]}')
+		modeled_tags_df = pd.concat([modeled_tags_df, temp_modeled_tags_df], axis=0)
+	
+	return modeled_tags_df
+
 @app.route('/get_sensor_mapping')
 def get_sensor_mapping():
 	resp = {'status': 'failed','data': 'none'}
 
 	try:
+		req_data = dict(request.values)
+		is_update = req_data['is_update']
+		is_update = True if is_update == 'true' else False
+
 		equipment_mapping_files = glob.glob(f'{config.TEMP_FOLDER}/*.csv')
-		if len(equipment_mapping_files) > 0:
+		if len(equipment_mapping_files) > 0 and not is_update:
 			equipment_mapping_df = read_sensor_mapping()
 		else:
 			engine = set_conn('DB_SOKET')
 			equipment_mapping_df = get_tag_sensor_mapping(engine)
 			close_conn(engine)
 
+			modeled_tags_df = get_modeled_tags()
+			
+			is_modeled = []
+			for idx, row in equipment_mapping_df.iterrows():
+				if row['f_tag_name'] in modeled_tags_df['Tag Name'].values.tolist():
+					is_modeled.append(True)
+				else:
+					is_modeled.append(False)
+
+			equipment_mapping_df['is_modeled'] = is_modeled
+			
 			curr_timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M')
 			equipment_mapping_df.dropna(inplace=True)
 			equipment_mapping_df.to_csv(f'{config.TEMP_FOLDER}/equipment_mapping_{curr_timestamp}.csv', \
@@ -141,7 +167,8 @@ def get_raw_data():
 
 		n_all_data = realtime_df.shape[0]
 		n_null = int(realtime_df.isna().sum().values[0])
-		outlier_df, n_outlier = outlier_calculator(realtime_df, config.OUTLIER_SIGMA)
+		outlier_df, n_outlier = \
+			outlier_calculator(realtime_df, config.OUTLIER_SIGMA)
 
 		n_outlier = n_outlier[realtime_df.columns[0]]
 

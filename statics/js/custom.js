@@ -109,6 +109,7 @@ $(document).ready(function() {
 	});
 
 	$.ajax({url: "/get_sensor_mapping",
+	data: {'is_update': 'false'}, 
 	success: function(data){		
 		sensor_mapping.columns = data.data.columns
 		sensor_mapping.values = data.data.data

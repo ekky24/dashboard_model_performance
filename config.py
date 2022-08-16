@@ -10,6 +10,7 @@ SURVIVAL_N_PREDICTION = 365
 
 OUTLIER_SIGMA = 3
 TEMP_FOLDER = 'temp'
+DATA_FOLDER = 'data'
 HISTORIAN_DATA_FOLDER = 'data/historian_data'
 ANOMALY_DETECTION_DUMP_FOLDER = 'result/anomaly_detection_dump'
 BAD_MODEL_LIST_DUMP_FOLDER = 'result/bad_model_table_dump'
