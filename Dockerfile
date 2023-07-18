@@ -8,4 +8,6 @@ RUN pip install -r requirements.txt
 
 COPY . /app
 
-ENTRYPOINT ["python","app.py"]
+RUN chmod -R 777 /app
+
+ENTRYPOINT ["./gunicorn.sh"]
