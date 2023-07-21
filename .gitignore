@@ -4,4 +4,4 @@
 /temp
 /.k8s
 /trained_models
-/data
+/data/historian_data
