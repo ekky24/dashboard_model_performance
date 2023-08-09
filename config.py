@@ -17,12 +17,12 @@ BAD_MODEL_LIST_DUMP_FOLDER = 'result/bad_model_table_dump'
 HOST_URL = '35.219.48.62'
 
 UNIT_NAME_MAPPER = {
-    'PLTU Paiton 1': 'UJPAITON1',
-    'PLTU Paiton 2': 'UJPAITON2',
-    'PLTU Tenayan 1': 'UJTNY1',
-    'PLTU Tenayan 2': 'UJTNY2',
-    'PLTU Tanjung Awar-Awar 1': 'UJTAW1',
-    'PLTU Tanjung Awar-Awar 2': 'UJTAW2',
+    'PLTU Paiton 1': 'PAITON1',
+    'PLTU Paiton 2': 'PAITON2',
+    'PLTU Tenayan 1': 'TNY1',
+    'PLTU Tenayan 2': 'TNY2',
+    'PLTU Tanjung Awar-Awar 1': 'TAA1',
+    'PLTU Tanjung Awar-Awar 2': 'TAA2',
     'PLTU Pacitan 1': 'UJPCT1',
     'PLTU Pacitan 2': 'UJPCT2',
     'PLTA Sengguruh 1': 'UPBRS_SENGGURUH_1',

@@ -15,6 +15,7 @@ from utils.data_connector import set_conn, get_tag_sensor_mapping, get_realtime_
 	get_sensor_information_from_unit, get_tag_alarm, close_conn
 from utils.anomaly_predictor import calculate_limits, get_historian_data, get_model, \
 	create_lstm_sequence, flatten_to_2d, detect_anomalies
+from utils.general_utils import get_tags_data
 from credentials.db_credentials import DB_UNIT_MAPPER
 from utils.data_cleaner import handle_nan_in_sensor_df, outlier_calculator
 import config
@@ -22,7 +23,7 @@ import os
 import glob
 import sys
 
-debug_mode = False
+debug_mode = True
 
 app = Flask(__name__, static_folder="statics")
 app.secret_key = 'dashboard_model_performance'
@@ -50,6 +51,10 @@ def survival_analysis():
 @app.route('/anomaly_validation')
 def anomaly_validation():
 	return render_template('anomaly-detection-validation.html')
+
+@app.route('/anomaly_realtime_validation')
+def anomaly_realtime_validation():
+	return render_template('anomaly-detection-realtime-validation.html')
 
 @app.route('/anomaly_detection_bad_model')
 def anomaly_detection_bad_model():
@@ -444,6 +449,55 @@ def get_survival_analysis_data():
 		resp['data']['prediction'] = {}
 		resp['data']['prediction']['data'] = prediction_df.to_dict(orient='split')
 		resp['data']['prediction']['equipment_name'] = equipment
+
+	except Exception as e:
+		resp['status'] = 'failed'
+		resp['data'] = str(e)
+		print(f'{str(e)} on line {sys.exc_info()[-1].tb_lineno}')
+
+	return jsonify(resp)
+
+@app.route('/get_anomaly_detection_realtime_validation_data')
+def get_anomaly_detection_realtime_validation_data():
+	resp = {'status': 'failed','data': 'none'}
+
+	try:
+		req_data = dict(request.values)
+		unit = req_data['unit']
+		date_range = req_data['date_range']
+		unit = config.UNIT_NAME_MAPPER[unit]
+
+		raw_start_date = date_range.split(' - ')[0]
+		raw_start_date = raw_start_date.split('/')
+		start_date = f'{raw_start_date[2]}-{raw_start_date[1]}-{raw_start_date[0]}'
+
+		raw_end_date = date_range.split(' - ')[1]
+		raw_end_date = raw_end_date.split('/')
+		end_date = f'{raw_end_date[2]}-{raw_end_date[1]}-{raw_end_date[0]}'
+
+		curr_timestamp = datetime.datetime.now()
+		curr_date = curr_timestamp.strftime('%Y-%m-%d')
+		start_time = f'{start_date} 00:00:00'
+
+		if end_date == curr_date:
+			curr_hour = curr_timestamp.strftime('%H:%M:%S')
+			end_time = f'{end_date} {curr_hour}'
+		else:
+			end_time = f'{end_date} 23:59:59'
+
+		modeled_tags_df, setting_tags_df = get_tags_data(unit)
+		curr_tag_name = modeled_tags_df.loc[:, 'Tag Name'].values.tolist()
+
+		engine = set_conn(unit)
+		realtime_df = get_realtime_data(engine, curr_tag_name, start_date, \
+			end_date, config.RAW_DATA_RESAMPLE_MIN)
+
+		autoencoder_df, lower_limit_df, upper_limit_df = get_anomaly_fn(engine, \
+			curr_tag_name, start_date, end_date, config.ANOMALY_RESAMPLE_MIN)
+		close_conn(engine)
+
+		print(realtime_df)
+		print(autoencoder_df)
 
 	except Exception as e:
 		resp['status'] = 'failed'

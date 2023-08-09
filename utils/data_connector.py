@@ -21,8 +21,13 @@ def get_tag_sensor_mapping(engine):
 	return result_df
 
 def get_realtime_data(engine, tag_name, start_date, end_date, resample_min):
-	query = f"SELECT f_address_no, f_date_rec, f_value FROM tb_bulk_history WHERE f_address_no = \
-		'{tag_name}' AND cast(f_date_rec as date) BETWEEN '{start_date}' AND '{end_date}'"
+	if isinstance(tag_name, str):
+		tag_script = f"= '{tag_name}'" 
+	else:
+		tag_script = f'IN {str(tuple(tag_name))}'
+
+	query = f"SELECT f_address_no, f_date_rec, f_value FROM tb_bulk_history WHERE f_address_no \
+		{tag_script} AND cast(f_date_rec as date) BETWEEN '{start_date}' AND '{end_date}'"
 	realtime_df = pd.read_sql(query, con=engine)
 
 	if realtime_df.empty:
@@ -38,8 +43,13 @@ def get_realtime_data(engine, tag_name, start_date, end_date, resample_min):
 	return realtime_df
 
 def get_anomaly_fn(engine, tag_name, start_date, end_date, resample_min):
+	if isinstance(tag_name, str):
+		tag_script = f"= '{tag_name}'" 
+	else:
+		tag_script = f'IN {str(tuple(tag_name))}'
+	
 	query = f"SELECT f_tag_name, f_timestamp, f_value, f_upper_limit, f_lower_limit FROM \
-		tb_rb_anomaly_history WHERE f_tag_name = '{tag_name}' AND cast(f_timestamp as date) \
+		tb_rb_anomaly_history WHERE f_tag_name {tag_script} AND cast(f_timestamp as date) \
 		BETWEEN '{start_date}' AND '{end_date}'"
 	result_df = pd.read_sql(query, con=engine)
 
