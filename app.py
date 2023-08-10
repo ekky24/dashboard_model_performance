@@ -557,7 +557,7 @@ def get_anomaly_detection_realtime_validation_data():
 			elif type_value == 'limit_small':
 				is_within_criteria = check_limit_small(realtime_df[[col]], lower_limit_df[[col]], \
 					upper_limit_df[[col]], curr_setting, threshold_value)
-			elif type_value == 'limit_small':
+			elif type_value == 'limit_big':
 				is_within_criteria = check_limit_big(realtime_df[[col]], lower_limit_df[[col]], \
 					upper_limit_df[[col]], curr_setting, threshold_value)
 
