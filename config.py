@@ -14,6 +14,7 @@ DATA_FOLDER = 'data'
 HISTORIAN_DATA_FOLDER = 'data/historian_data'
 ANOMALY_DETECTION_DUMP_FOLDER = 'result/anomaly_detection_dump'
 BAD_MODEL_LIST_DUMP_FOLDER = 'result/bad_model_table_dump'
+ANOMALY_REALTIME_VALIDATION_DUMP_FOLDER = 'result/anomaly_realtime_validation_dump'
 HOST_URL = '35.219.48.62'
 
 UNIT_NAME_MAPPER = {

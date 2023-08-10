@@ -39,6 +39,21 @@
             </select>
         </div>
     </form>
+
+    <!-- Special for realtime validation page -->
+    <form
+        class="d-none d-sm-inline-block form-inline ml-md-3 my-2 my-md-0 mw-100 navbar-select-realtime-validation-type">
+        <div class="input-group div-realtime-validation-type">
+            <select class="form-control bg-light border-0 small searchable-select" name="realtime-validation-type" id="select-realtime-validation-type">
+                <option></option>
+                <option value="flat_data">Flat Data</option>
+                <option value="big_anomaly_count">Big Anomaly Count</option>
+                <option value="limit_small">Limit Small</option>
+                <option value="limit_big">Limit Big</option>
+            </select>
+        </div>
+    </form>
+    
     <form
         class="d-none d-sm-inline-block form-inline ml-md-3 my-2 my-md-0 mw-100 navbar-date-picker">
         <div class="input-group">

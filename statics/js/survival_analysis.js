@@ -73,6 +73,7 @@ $(document).ready(function() {
 	$(".navbar-date-picker").remove()
     $(".navbar-select-tag").remove()
     $(".navbar-select-bad-model-time-interval").remove()
+    $(".navbar-select-realtime-validation-type").remove()
 
     /* Nav Items Configuration */
     $('.nav-item').removeClass("active");

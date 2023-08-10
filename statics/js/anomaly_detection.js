@@ -202,6 +202,7 @@ $(document).ready(function() {
     $('#nav-group-anomaly-detection').addClass("active");
     $('#nav-realtime-anomaly-detection').addClass("active");
     $(".navbar-select-bad-model-time-interval").remove()
+    $(".navbar-select-realtime-validation-type").remove()
 
     $('#select-tag').on('change', fetch_anomaly_detection_data);
     $('#date-range-picker').on('apply.daterangepicker', fetch_anomaly_detection_data);

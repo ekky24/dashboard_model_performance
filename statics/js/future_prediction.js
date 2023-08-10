@@ -137,6 +137,7 @@ $(document).ready(function() {
     $('.nav-item').removeClass("active");
     $('#nav-future-prediction').addClass("active");
     $(".navbar-select-bad-model-time-interval").remove()
+    $(".navbar-select-realtime-validation-type").remove()
 
     $('#select-tag').on('change', fetch_future_prediction_data);
     $('#date-range-picker').on('apply.daterangepicker', fetch_future_prediction_data);

@@ -66,4 +66,5 @@ $(document).ready(function() {
     $('.nav-item').removeClass("active");
     $('#nav-sensor-mapping').addClass("active");
     $(".navbar-select-bad-model-time-interval").remove()
+    $(".navbar-select-realtime-validation-type").remove()
 });

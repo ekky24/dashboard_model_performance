@@ -22,6 +22,10 @@
     width: 20rem !important;
 }
 
+.navbar-select-realtime-validation-type {
+    width: 20rem !important;
+}
+
 .select2-container--default .select2-selection--single {
     border: none !important;
 }

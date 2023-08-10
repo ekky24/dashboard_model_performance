@@ -271,6 +271,7 @@ $(document).ready(function() {
     $(".navbar-select-tag").remove()
     $(".navbar-date-picker").remove()
     $(".div-bad-model-time-interval").show()
+    $(".navbar-select-realtime-validation-type").remove()
 
     /* Nav Items Configuration */
     $('.nav-item').removeClass("active");

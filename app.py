@@ -15,7 +15,8 @@ from utils.data_connector import set_conn, get_tag_sensor_mapping, get_realtime_
 	get_sensor_information_from_unit, get_tag_alarm, close_conn
 from utils.anomaly_predictor import calculate_limits, get_historian_data, get_model, \
 	create_lstm_sequence, flatten_to_2d, detect_anomalies
-from utils.general_utils import get_tags_data
+from utils.general_utils import get_tags_data, check_flat_data, check_anomaly_perc_big, \
+	check_limit_big, check_limit_small
 from credentials.db_credentials import DB_UNIT_MAPPER
 from utils.data_cleaner import handle_nan_in_sensor_df, outlier_calculator
 import config
@@ -465,6 +466,12 @@ def get_anomaly_detection_realtime_validation_data():
 		req_data = dict(request.values)
 		unit = req_data['unit']
 		date_range = req_data['date_range']
+		type_value = req_data['type_value']
+		threshold_value = req_data['threshold_value']
+		
+		if threshold_value != "":
+			threshold_value = float(threshold_value)
+
 		unit = config.UNIT_NAME_MAPPER[unit]
 
 		raw_start_date = date_range.split(' - ')[0]
@@ -496,8 +503,81 @@ def get_anomaly_detection_realtime_validation_data():
 			curr_tag_name, start_date, end_date, config.ANOMALY_RESAMPLE_MIN)
 		close_conn(engine)
 
-		print(realtime_df)
-		print(autoencoder_df)
+		# realtime data preprocessing
+		realtime_df = handle_nan_in_sensor_df(realtime_df, config.ANOMALY_RESAMPLE_MIN, start_time, \
+			pd.Timestamp(end_time).round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
+		autoencoder_df = handle_nan_in_sensor_df(autoencoder_df, config.ANOMALY_RESAMPLE_MIN, \
+			start_time, pd.Timestamp(end_time).round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
+		lower_limit_df = handle_nan_in_sensor_df(lower_limit_df, config.ANOMALY_RESAMPLE_MIN, \
+			start_time, pd.Timestamp(end_time).round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
+		upper_limit_df = handle_nan_in_sensor_df(upper_limit_df, config.ANOMALY_RESAMPLE_MIN, \
+			start_time, pd.Timestamp(end_time).round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
+		anomaly_marker_df = realtime_df.copy()
+
+		try:
+			anomaly_marker_df[((anomaly_marker_df <= upper_limit_df) & \
+				(anomaly_marker_df >= lower_limit_df))] = np.nan
+		except ValueError:
+			n_realtime_sensors = realtime_df.shape[1]
+			n_lower_limit_sensors = lower_limit_df.shape[1]
+			n_upper_limit_sensors = upper_limit_df.shape[1]
+
+			# removing unmatch columns
+			if n_realtime_sensors < n_lower_limit_sensors:
+				drop_cols = []
+				for col in lower_limit_df.columns:
+					if not col in realtime_df.columns:
+						drop_cols.append(col)
+				
+				lower_limit_df.drop(drop_cols, axis=1, inplace=True)
+				upper_limit_df.drop(drop_cols, axis=1, inplace=True)
+
+				anomaly_marker_df[((anomaly_marker_df <= upper_limit_df) & \
+					(anomaly_marker_df >= lower_limit_df))] = np.nan
+
+		curr_modeled_tags_df = modeled_tags_df.copy()
+		curr_unit = unit
+		result_dict = {
+			'system': [],
+			'equipment': [],
+			'tagname': [],
+		}
+
+		for col in realtime_df.columns:
+			is_within_criteria = False
+			curr_system = curr_modeled_tags_df.loc[modeled_tags_df['Tag Name'] == col, 'System'].values[0]
+			curr_equipment = curr_modeled_tags_df.loc[modeled_tags_df['Tag Name'] == col, 'Equipment'].values[0]
+			curr_setting = setting_tags_df.loc[setting_tags_df['f_address_no'] == col]
+			
+			if type_value == 'flat_data':
+				is_within_criteria = check_flat_data(realtime_df[[col]])
+			elif type_value == 'big_anomaly_count':
+				is_within_criteria = check_anomaly_perc_big(realtime_df[[col]], \
+					anomaly_marker_df[[col]], threshold_value)
+			elif type_value == 'limit_small':
+				is_within_criteria = check_limit_small(realtime_df[[col]], lower_limit_df[[col]], \
+					upper_limit_df[[col]], curr_setting, threshold_value)
+			elif type_value == 'limit_small':
+				is_within_criteria = check_limit_big(realtime_df[[col]], lower_limit_df[[col]], \
+					upper_limit_df[[col]], curr_setting, threshold_value)
+
+			if is_within_criteria:
+				result_dict['system'].append(curr_system)
+				result_dict['equipment'].append(curr_equipment)
+				result_dict['tagname'].append(col)
+
+		result_df = pd.DataFrame(result_dict)
+
+		for f in glob.glob(f"{config.ANOMALY_REALTIME_VALIDATION_DUMP_FOLDER}/{unit}_{type_value}*.csv"):
+			os.remove(f)
+		
+		result_filename = f'{unit}_{type_value}.csv'
+		result_df.to_csv(f'{config.ANOMALY_REALTIME_VALIDATION_DUMP_FOLDER}/{result_filename}', index=False)
+
+		resp['status'] = 'success'
+		resp['data'] = {}
+
+		resp['data']['bad_model_list'] = result_df.to_dict(orient='split')
 
 	except Exception as e:
 		resp['status'] = 'failed'
