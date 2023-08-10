@@ -255,6 +255,9 @@ $(document).ready(function() {
             $(".div-limit-threshold").hide()
             $(".div-flat-data").show()
         }
+
+        $("#perc_threshold").val("")
+        $("#limit_threshold").val("")
     }
 
     /* ***************************************** */
