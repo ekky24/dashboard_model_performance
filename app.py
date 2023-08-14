@@ -1,5 +1,6 @@
 from flask import Flask, render_template, url_for, request, jsonify, session, send_file
 from flask.globals import current_app
+from flask_cors import CORS
 from numpy.lib.type_check import real
 import pandas as pd
 import numpy as np
@@ -24,10 +25,11 @@ import os
 import glob
 import sys
 
-debug_mode = False
+debug_mode = True
 
 app = Flask(__name__, static_folder="statics")
 app.secret_key = 'dashboard_model_performance'
+cors = CORS(app, supports_credentials=True)
 
 @app.route('/')
 def home():
@@ -586,6 +588,29 @@ def get_anomaly_detection_realtime_validation_data():
 		print(f'{str(e)} on line {sys.exc_info()[-1].tb_lineno}')
 
 	return jsonify(resp)
+
+@app.route('/download_anomaly_detection_realtime_validation_data')
+def download_anomaly_detection_realtime_validation_data():
+	resp = {'status': 'failed','data': 'none'}
+
+	try:
+		req_data = dict(request.values)
+		unit = req_data['unit']
+		type_value = req_data['type_value']
+
+		resp['status'] = 'success'
+		resp['data'] = {}
+		
+	except Exception as e:
+		resp['status'] = 'failed'
+		resp['data'] = str(e)
+		print(f'{str(e)} on line {sys.exc_info()[-1].tb_lineno}')
+		return jsonify(resp)
+
+	return send_file(f"{config.ANOMALY_REALTIME_VALIDATION_DUMP_FOLDER}/{unit}_{type_value}.csv",
+		mimetype='text/csv',
+		attachment_filename=f"{unit}_{type_value}.csv",
+    	as_attachment=True)
 
 @app.route('/get_anomaly_detection_bad_model_data')
 def get_anomaly_detection_bad_model_data():

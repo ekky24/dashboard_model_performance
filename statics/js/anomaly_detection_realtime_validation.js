@@ -11,6 +11,8 @@ $(document).ready(function() {
             "columnDefs": [{ "targets": -1, "data": null, "defaultContent": "<a class='btn btn-info btnView'>View</a>"}]
         });
 
+        $('#download-table').prop('disabled', true);
+
         unit_value = $('#select-unit').val();
         date_range_value = $('#date-range-picker').val();
         type_value = $('#select-realtime-validation-type').val();
@@ -40,11 +42,10 @@ $(document).ready(function() {
                     alert('FAILED!!\n\n' + data.data)
                 }
                 else if(data.status == 'success') {
-                    $('#download-table').attr('href', 'http://35.219.48.62/anomaly_realtime_validation_dump/'+String(unit_value)+'_'+String(type_value)+'.csv')
-
                     $('#div-intro-text').remove();
                     $('#div-download-table').show();
                     $('#anomaly-bad-model-table').show();
+                    $('#download-table').prop('disabled', false);
 
                     bad_model_data = data.data.bad_model_list.data;
 
@@ -62,6 +63,18 @@ $(document).ready(function() {
                 $('#loading-modal').modal('hide');
             });
         }
+    }
+
+    function download_anomaly_detection_realtime_validation_data(event) {
+        event.preventDefault()
+
+        unit_value = $('#select-unit').val();
+        type_value = $('#select-realtime-validation-type').val();
+
+        url = "/download_anomaly_detection_realtime_validation_data?unit=" + 
+            unit_value + "&type_value=" + type_value;
+
+        window.location.href = url;
     }
 
     function bad_model_table_clicked() {
@@ -282,4 +295,5 @@ $(document).ready(function() {
     $('#select-realtime-validation-type').on('change', change_threshold_layout);
 
     $('#badModelDataTable tbody').on('click', '[class*=btnView]', bad_model_table_clicked);
+    $('#download-table').on('click', download_anomaly_detection_realtime_validation_data)
 });
