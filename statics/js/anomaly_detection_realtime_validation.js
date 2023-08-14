@@ -40,7 +40,7 @@ $(document).ready(function() {
                     alert('FAILED!!\n\n' + data.data)
                 }
                 else if(data.status == 'success') {
-                    // $('#download-table').attr('href', 'http://35.219.48.62/bad_model_table_dump/'+String(unit_value)+'.csv')
+                    $('#download-table').attr('href', 'http://35.219.48.62/anomaly_realtime_validation_dump/'+String(unit_value)+'_'+String(type_value)+'.csv')
 
                     $('#div-intro-text').remove();
                     $('#div-download-table').show();

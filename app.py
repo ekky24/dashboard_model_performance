@@ -472,7 +472,8 @@ def get_anomaly_detection_realtime_validation_data():
 		if threshold_value != "":
 			threshold_value = float(threshold_value)
 
-		unit = config.UNIT_NAME_MAPPER[unit]
+		alt_unit = unit
+		unit = config.UNIT_NAME_MAPPER[alt_unit]
 
 		raw_start_date = date_range.split(' - ')[0]
 		raw_start_date = raw_start_date.split('/')
@@ -571,7 +572,7 @@ def get_anomaly_detection_realtime_validation_data():
 		for f in glob.glob(f"{config.ANOMALY_REALTIME_VALIDATION_DUMP_FOLDER}/{unit}_{type_value}*.csv"):
 			os.remove(f)
 		
-		result_filename = f'{unit}_{type_value}.csv'
+		result_filename = f'{alt_unit}_{type_value}.csv'
 		result_df.to_csv(f'{config.ANOMALY_REALTIME_VALIDATION_DUMP_FOLDER}/{result_filename}', index=False)
 
 		resp['status'] = 'success'

@@ -124,6 +124,7 @@ $(document).ready(function() {
     $('.nav-item').removeClass("active");
     $('#nav-raw-data').addClass("active");
     $(".navbar-select-bad-model-time-interval").remove()
+    $(".navbar-select-realtime-validation-type").remove()
 
     $('#select-tag').on('change', fetch_raw_data);
     $('#date-range-picker').on('apply.daterangepicker', fetch_raw_data);
