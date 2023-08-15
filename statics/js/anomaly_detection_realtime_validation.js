@@ -11,7 +11,7 @@ $(document).ready(function() {
             "columnDefs": [{ "targets": -1, "data": null, "defaultContent": "<a class='btn btn-info btnView'>View</a>"}]
         });
 
-        $('#download-table').prop('disabled', true);
+        $('#download-table').attr('disabled', 'disabled');
 
         unit_value = $('#select-unit').val();
         date_range_value = $('#date-range-picker').val();
@@ -45,7 +45,7 @@ $(document).ready(function() {
                     $('#div-intro-text').remove();
                     $('#div-download-table').show();
                     $('#anomaly-bad-model-table').show();
-                    $('#download-table').prop('disabled', false);
+                    $('#download-table').removeAttr('disabled');
 
                     bad_model_data = data.data.bad_model_list.data;
 
