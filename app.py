@@ -553,7 +553,7 @@ def get_anomaly_detection_realtime_validation_data():
 			curr_setting = setting_tags_df.loc[setting_tags_df['f_address_no'] == col]
 			
 			if type_value == 'flat_data':
-				is_within_criteria = check_flat_data(realtime_df[[col]])
+				is_within_criteria = check_flat_data(autoencoder_df[[col]])
 			elif type_value == 'big_anomaly_count':
 				is_within_criteria = check_anomaly_perc_big(realtime_df[[col]], \
 					anomaly_marker_df[[col]], threshold_value)
