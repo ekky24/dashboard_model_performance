@@ -1,5 +1,5 @@
 DB_SERVER = {
-    'host': '10.7.1.116:3307',
+    'host': '127.0.0.1:15801',
     'username': 'ds',
     'password': 'ds@Sml23'
 }
@@ -46,8 +46,29 @@ DB_UNIT_MAPPER = {
 	'UJTD_2': 'db_tidore_2',
 	'UJKD_1': 'db_kendari_1',
 	'UJKD_2': 'db_kendari_2',
+	'UJRP_1': 'db_ropa_1',
+    'UJRP_2': 'db_ropa_2',
+    'UJKP_1': 'db_ketapang_1',
+    'UJKP_2': 'db_ketapang_1',
+    'UJTB_1': 'db_tembilahan_1',
+    'UJTB_2': 'db_tembilahan_2',
 }
 
 TB_MAPPER = {
 	'equipment_mapper': 'tb_im_equipments',
+}
+
+SSH_MAPPER = {
+	'testing': {
+		'read': {
+			'ssh': '10.7.1.116',
+			'ssh_port': 22055,
+			'username': 'apps',
+			'password': 'Soket2023!',
+			'remote_access': '127.0.0.1',
+			'remote_access_port': 3306,
+			'local_access': '127.0.0.1',
+			'local_access_port': 15801,
+		},
+	},
 }

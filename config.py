@@ -35,8 +35,8 @@ UNIT_NAME_MAPPER = {
     'PLTA T.Agung 2': 'UPBRS_TULUNGAGUNG_2',
     'PLTU Kaltim Teluk 1': 'UJKTT_1',
     'PLTU Kaltim Teluk 2': 'UJKTT_2',
-    'PLTU Rembang 1': 'UJRBG_1',
-    'PLTU Rembang 2': 'UJRBG_2',
+    'PLTU Rembang 1 (PLTU 20)': 'UJRBG_1',
+    'PLTU Rembang 2 (PLTU 10)': 'UJRBG_2',
     'PLTU Bolok 1': 'UJLJ_BOLOK_1',
     'PLTU Bolok 2': 'UJLJ_BOLOK_2',
     'PLTU Belitung 1': 'UJLJ_BTG_1',
@@ -51,6 +51,12 @@ UNIT_NAME_MAPPER = {
     'PLTU Tidore 2': 'UJTD_2',
     'PLTU Kendari 1': 'UJKD_1',
     'PLTU Kendari 2': 'UJKD_2',
+    'PLTU Ropa 1': 'UJRP_1',
+    'PLTU Ropa 2': 'UJRP_2',
+    'PLTU Ketapang 1': 'UJKP_1',
+    'PLTU Ketapang 2': 'UJKP_2',
+    'PLTU Tembilahan 1': 'UJTB_1',
+    'PLTU Tembilahan 2': 'UJTB_2',
 }
 
 TIMEZONE_MAPPER = {
@@ -87,4 +93,10 @@ TIMEZONE_MAPPER = {
     'PLTU Tidore 2': 'Asia/Jakarta',
     'PLTU Kendari 1': 'Asia/Jakarta',
     'PLTU Kendari 2': 'Asia/Jakarta',
+    'PLTU Ropa 1': 'Asia/Jakarta',
+    'PLTU Ropa 2': 'Asia/Jakarta',
+    'PLTU Ketapang 1': 'Asia/Jakarta',
+    'PLTU Ketapang 2': 'Asia/Jakarta',
+    'PLTU Tembilahan 1': 'Asia/Jakarta',
+    'PLTU Tembilahan 2': 'Asia/Jakarta',
 }

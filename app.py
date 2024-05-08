@@ -25,7 +25,7 @@ import os
 import glob
 import sys
 
-debug_mode = False
+debug_mode = True
 
 app = Flask(__name__, static_folder="statics")
 app.secret_key = 'dashboard_model_performance'
@@ -93,9 +93,9 @@ def get_sensor_mapping():
 		if len(equipment_mapping_files) > 0 and not is_update:
 			equipment_mapping_df = read_sensor_mapping()
 		else:
-			engine = set_conn('DB_SOKET')
+			engine, tunnel = set_conn('DB_SOKET', debug_mode)
 			equipment_mapping_df = get_tag_sensor_mapping(engine)
-			close_conn(engine)
+			close_conn(engine, tunnel, debug_mode)
 
 			modeled_tags_df = get_modeled_tags()
 			
@@ -151,10 +151,10 @@ def get_raw_data():
 		else:
 			end_time = f'{end_date} 23:59:59'
 
-		engine = set_conn(config.UNIT_NAME_MAPPER[unit])
+		engine, tunnel = set_conn(config.UNIT_NAME_MAPPER[unit], debug_mode)
 		realtime_df = get_realtime_data(engine, tag_name, start_date, \
 			end_date, config.RAW_DATA_RESAMPLE_MIN)
-		close_conn(engine)
+		close_conn(engine, tunnel, debug_mode)
 
 		dates_set = set(realtime_df.index)
 		all_dates = pd.Series(data=pd.date_range(start=start_time, end=end_time, \
@@ -244,14 +244,14 @@ def get_anomaly_detection_data():
 		else:
 			end_time = f'{end_date} 23:59:59'
 
-		engine = set_conn(config.UNIT_NAME_MAPPER[unit])
-		engine_soket = set_conn('DB_SOKET')
+		engine, tunnel = set_conn(config.UNIT_NAME_MAPPER[unit], debug_mode)
+		engine_soket, tunnel_soket = set_conn('DB_SOKET', debug_mode)
 		realtime_df = get_realtime_data(engine, tag_name, start_date, end_date, config.ANOMALY_RESAMPLE_MIN)
 		autoencoder_df, lower_limit_df, upper_limit_df = get_anomaly_fn(engine, \
 			tag_name, start_date, end_date, config.ANOMALY_RESAMPLE_MIN)
 		l1_alarm, h1_alarm, tag_desc = get_tag_alarm(engine_soket, tag_name)
-		close_conn(engine)
-		close_conn(engine_soket)
+		close_conn(engine, tunnel, debug_mode)
+		close_conn(engine_soket, tunnel_soket, debug_mode)
 
 		realtime_df = handle_nan_in_sensor_df(realtime_df, config.ANOMALY_RESAMPLE_MIN, start_time, \
 			pd.Timestamp(end_time).round(f'{config.ANOMALY_RESAMPLE_MIN}min'))
@@ -350,12 +350,12 @@ def get_future_prediction_data():
 		###############################################################################
 		
 
-		engine = set_conn(config.UNIT_NAME_MAPPER[unit])
+		engine, tunnel = set_conn(config.UNIT_NAME_MAPPER[unit], debug_mode)
 		realtime_df = get_realtime_data(engine, tag_name, start_date, \
 			end_date, config.FUTURE_PREDICTION_RESAMPLE_MIN)
 		# prediction_df = get_future_prediction_fn(engine, tag_name, start_date, \
 		# 	end_date, config.FUTURE_PREDICTION_RESAMPLE_MIN)
-		close_conn(engine)
+		close_conn(engine, tunnel, debug_mode)
 
 		realtime_df = handle_nan_in_sensor_df(realtime_df, config.FUTURE_PREDICTION_RESAMPLE_MIN, start_time, \
 			pd.Timestamp(end_time).round(f'{config.FUTURE_PREDICTION_RESAMPLE_MIN}min'))
@@ -428,9 +428,9 @@ def get_survival_analysis_data():
 		unit = req_data['unit']
 		equipment = req_data['equipment']
 
-		engine = set_conn(config.UNIT_NAME_MAPPER[unit])
+		engine, tunnel = set_conn(config.UNIT_NAME_MAPPER[unit], debug_mode)
 		survival_df = get_survival_data(engine, equipment, config.SURVIVAL_N_PREDICTION)
-		close_conn(engine)
+		close_conn(engine, tunnel, debug_mode)
 
 		prediction_dict = {
 			'timestamp': [],
@@ -498,13 +498,13 @@ def get_anomaly_detection_realtime_validation_data():
 		modeled_tags_df, setting_tags_df = get_tags_data(unit)
 		curr_tag_name = modeled_tags_df.loc[:, 'Tag Name'].values.tolist()
 
-		engine = set_conn(unit)
+		engine, tunnel = set_conn(unit, debug_mode)
 		realtime_df = get_realtime_data(engine, curr_tag_name, start_date, \
 			end_date, config.RAW_DATA_RESAMPLE_MIN)
 
 		autoencoder_df, lower_limit_df, upper_limit_df = get_anomaly_fn(engine, \
 			curr_tag_name, start_date, end_date, config.ANOMALY_RESAMPLE_MIN)
-		close_conn(engine)
+		close_conn(engine, tunnel, debug_mode)
 
 		# realtime data preprocessing
 		realtime_df = handle_nan_in_sensor_df(realtime_df, config.ANOMALY_RESAMPLE_MIN, start_time, \
@@ -640,11 +640,11 @@ def get_anomaly_detection_bad_model_data():
 		left_df = pd.DataFrame(index=left_index[1:])
 		left_df.index = left_df.index.tz_localize(None)
 
-		engine = set_conn(config.UNIT_NAME_MAPPER[unit])
+		engine, tunnel = set_conn(config.UNIT_NAME_MAPPER[unit], debug_mode)
 		interval_anomaly_df = get_anomaly_interval_data(engine, time_interval)
 		sensor_information_df = get_sensor_information_from_unit(engine, unit)
 		sensor_information_df.set_index('f_tag_name', inplace=True)
-		close_conn(engine)
+		close_conn(engine, tunnel, debug_mode)
 
 		concated_anomaly_count_df = pd.pivot_table(interval_anomaly_df, values='f_status_limit', index='f_timestamp', columns='f_tag_name')
 		concated_anomaly_count_df = pd.merge(left_df, concated_anomaly_count_df, how='left', left_index=True, right_index=True)

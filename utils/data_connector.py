@@ -3,13 +3,21 @@ import pandas as pd
 import numpy as np
 import sqlalchemy as db
 import os
-from credentials.db_credentials import DB_SERVER, DB_LOCAL, DB_UNIT_MAPPER, TB_MAPPER
+from credentials.db_credentials import DB_SERVER, DB_LOCAL, DB_UNIT_MAPPER, TB_MAPPER, SSH_MAPPER
 from utils.data_cleaner import handle_nan_in_sensor_df
 import config
+import sshtunnel
 
-def set_conn(unit):
+def set_conn(unit, debug_mode):
+	if debug_mode:
+		ssh_tunneling = SSH_MAPPER['testing']['read']
+		tunnel = sshtunnel.SSHTunnelForwarder((ssh_tunneling['ssh'], ssh_tunneling['ssh_port']), \
+			ssh_username=ssh_tunneling['username'], ssh_password=ssh_tunneling['password'],
+			remote_bind_address=(ssh_tunneling['remote_access'], ssh_tunneling['remote_access_port']), \
+			local_bind_address=(ssh_tunneling['local_access'], ssh_tunneling['local_access_port']))
+		tunnel.start()
 	engine = db.create_engine(f"mysql+mysqlconnector://{DB_SERVER['username']}:{DB_SERVER['password']}@{DB_SERVER['host']}/{DB_UNIT_MAPPER[unit]}",echo=False)
-	return engine
+	return engine, tunnel
 
 def get_tag_sensor_mapping(engine):
 	query = "SELECT u.f_unit_name f_unit, e.f_equipment_name_alt1 f_system, e.f_equipment_name f_equipment, \
@@ -135,5 +143,8 @@ def get_sensor_information_from_unit(engine, unit):
 
 	return result_df
 
-def close_conn(engine):
+def close_conn(engine, tunnel, debug_mode):
+	if debug_mode:
+		tunnel.stop()
+
 	engine.dispose()
