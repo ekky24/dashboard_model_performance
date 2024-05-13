@@ -34,9 +34,12 @@ def get_realtime_data(engine, tag_name, start_date, end_date, resample_min):
 	else:
 		tag_script = f'IN {str(tuple(tag_name))}'
 
-	query = f"SELECT f_address_no, f_date_rec, f_value FROM tb_raw_history WHERE f_address_no \
+	query = f"SELECT f_address_no, f_date_rec, f_value FROM tb_bulk_history WHERE f_address_no \
 		{tag_script} AND cast(f_date_rec as date) BETWEEN '{start_date}' AND '{end_date}'"
 	realtime_df = pd.read_sql(query, con=engine)
+
+	print(query)
+	print(engine)
 
 	if realtime_df.empty:
 		raise Exception('Data is unavailable.')

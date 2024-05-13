@@ -1,5 +1,11 @@
+# DB_SERVER = {
+#     'host': '127.0.0.1:15801',
+#     'username': 'ds',
+#     'password': 'ds@Sml23'
+# }
+
 DB_SERVER = {
-    'host': '127.0.0.1:15801',
+    'host': '10.7.1.116:3307',
     'username': 'ds',
     'password': 'ds@Sml23'
 }
@@ -49,7 +55,7 @@ DB_UNIT_MAPPER = {
 	'UJRP_1': 'db_ropa_1',
     'UJRP_2': 'db_ropa_2',
     'UJKP_1': 'db_ketapang_1',
-    'UJKP_2': 'db_ketapang_1',
+    'UJKP_2': 'db_ketapang_2',
     'UJTB_1': 'db_tembilahan_1',
     'UJTB_2': 'db_tembilahan_2',
 }
